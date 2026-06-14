@@ -78,7 +78,10 @@
 | [05. 방어 시스템](docs/05_방어_시스템.md) | 항법/링크 보안 (스푸핑·재밍·명령위조 방어) |
 | [06. 내부 회로 설계](docs/06_회로_설계.md) | 전력분배·FC·컴패니언·넷런처/윈치/릴리스·인터록 |
 | [07. 소프트웨어 기획](docs/07_소프트웨어_기획.md) | 귀환·모니터링·캡처/투하 버튼, HW 연동 SW 아키텍처 |
-| [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 (`cad/talonet_frame.scad`) |
+| [08. 사후 포렌식](docs/08_사후_포렌식.md) | 적 드론 SD/GPS 익스플로잇 → **적 발사지점 좌표**(정당방위 표적정보) |
+| [09. Forensic Appliance Design](docs/09_Forensic_Appliance_Design.md) | ForensIQ-1 카운터-UAS 익스플로잇 기기 하드웨어 설계 (EN) |
+| [10. Forensic Appliance Operator Guide](docs/10_Forensic_Appliance_Operator_Guide.md) | ForensIQ-1 운용 가이드 (EN) |
+| [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 + 포렌식 기기 (`cad/*.scad`) |
 
 ## 🛡️ 방어 코드 (`defense/`)
 
@@ -93,6 +96,21 @@
 
 출처·라이선스: [`defense/README.md`](defense/README.md) · 테스트: `python -m unittest discover -s tests` (47 passing)
 
+## 🔬 카운터-UAS 익스플로잇 (`forensics/`)
+
+적이 **선빵**(악의적 자폭/정찰 드론)을 날렸고, 우리는 그물로 **수비(비살상 포획)만** 했다. 잡은 적 자산을 까서 **"이 새끼 어디서 쐈냐" = 적 발사지점 좌표(±오차반경)**를 뽑아 **정당방위 반격의 표적정보**를 만든다. 경찰 신고/법정 제출 ❌, **지휘관 표적 결심용 인텔** ⭕ (`defense/`가 우리를 지키면, `forensics/`는 잡은 걸 까서 출처를 짚는다):
+
+- **원본 불가침:** write-blocker 읽기전용 비트복사 + **SHA-256** 검증 (부팅 금지 → 안티포렌식/자폭 회피). 해시 불일치 시 `IntegrityError`로 **중단**
+- **검증 OSS 파서만(구현 완료):** ArduPilot `.bin`/`.tlog`(**pymavlink**) / PX4 `.ulg`(**pyulog**) / NMEA(**pynmea2**) / DJI(dji-log-parser) — 뇌피셜 파싱 금지
+- **★ 발사지점 지오로케이션:** GPS 항적 → **적 발사좌표 + 오차반경(CEP) + 신뢰도** + 의도표적(체공) + **folium** 지도. 반복 출발지 교차 = 적 기지(패턴오브라이프)
+- **정보 무결성(provenance):** append-only **해시체인** 출처기록 → 지휘관이 믿고 쓸 수 있게
+- **리포트:** **fpdf2 PDF** 카운터-UAS 표적 인텔 패킷 + 열전사(ESC/POS) 텍스트 + provenance 부록
+- **⚠️ 정보 ≠ 발사명령:** 교전은 **인간 지휘관이 ROE/국제인도법(구별·비례·예방)** 하에 결정. 자동 타격 없음, 민간 대상 금지. 발사지점은 **독립 수단으로 교차검증**
+- **현장 기기:** `ForensicAppliance.process_card()` 한 방 → 카드 삽입~인쇄~증거USB 아카이브
+
+기획/파이프라인: [`docs/08_사후_포렌식.md`](docs/08_사후_포렌식.md) · 모듈: [`forensics/README.md`](forensics/README.md) (**구현·테스트 완료**, 무거운 라이브러리는 지연 import → 의존성 0으로도 import 가능) · 기기: [`docs/09`](docs/09_Forensic_Appliance_Design.md)·[`docs/10`](docs/10_Forensic_Appliance_Operator_Guide.md)
+테스트: `python -m unittest discover -s tests` (68 passing) · 검증 OSS 설치: `pip install -r requirements-forensics.txt`
+
 ---
 
 ## ⚖️ 윤리 한 줄 (가장 중요)
@@ -106,12 +124,13 @@
 
 - [x] 기획 / 문서
 - [x] 방어 코드 (`defense/` 항법·링크 보안, 검증된 OSS 기반)
-- [x] OpenSCAD 파라메트릭 기체 모델 (`cad/talonet_frame.scad`)
-- [x] 내부 회로 설계 (docs/06)
-- [x] 소프트웨어 기획 — HW 연동 SW (docs/07) (← 지금 여기)
+- [x] OpenSCAD 파라메트릭 기체 모델 (`cad/talonet_frame.scad`) — 그물 입구 조임(cinch) 구동장치 포함
+- [x] 내부 회로 설계 (docs/06) — 시닝 모터(입구 조임) + 윈치(상하) 2단 결속 반영
+- [x] 소프트웨어 기획 — HW 연동 SW (docs/07)
+- [x] 사후 포렌식 기획 + 모듈 아키텍처/인터페이스 (docs/08, `forensics/`) (← 지금 여기)
 - [ ] 회로도(KiCad) / 하네스 / PCB 거버
 - [ ] 그물런처 시제품
 - [ ] VLM 학습 / 온디바이스 포팅
 - [ ] 비행 시험 (그물 맞고 우는 테스트용 드론 모집중)
 
-> ⚠️ 본 저장소는 **설계 단계**입니다. 방어 코드(`defense/`)와 파라메트릭 SCAD(`cad/`)는 구현·검증되었고, 비행/페이로드 실제 펌웨어·PCB는 추후 진행됩니다.
+> ⚠️ 본 저장소는 **설계 단계**입니다. 방어 코드(`defense/`)와 파라메트릭 SCAD(`cad/`)는 구현·검증되었고, 포렌식(`forensics/`)은 인터페이스/아키텍처 단계(어댑터는 다음 스텝), 비행/페이로드 실제 펌웨어·PCB는 추후 진행됩니다.
