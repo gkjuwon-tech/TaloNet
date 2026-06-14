@@ -60,6 +60,15 @@ batt_w           = 170;    // [80:260]
 batt_l           = 210;    // [120:320]
 batt_h           = 75;     // [30:140]
 
+/* [Capture net] */
+show_net         = true;
+net_span         = 620;    // [300:1000] deployed net width/depth
+net_drop         = 170;    // [40:400] catenary sag at centre
+net_cells        = 8;      // [4:14] mesh grid lines per side
+net_strut_d      = 3.2;    // [1:6] cord thickness (visual)
+net_fwd          = 540;    // [0:900] forward deploy distance from belly
+net_z            = -110;   // [-400:0] net top height (rel. lower deck)
+
 /* [Render] */
 $fn              = 64;
 
@@ -76,6 +85,7 @@ C_KHAKI   = [0.525, 0.522, 0.373];   // #86855F TaloNet signature khaki
 C_ALU     = [0.62, 0.62, 0.60];
 C_DARK    = [0.08, 0.08, 0.07];
 C_BATT    = [0.18, 0.20, 0.16];
+C_NET     = [0.49, 0.49, 0.40];      // capture-net cord (khaki-grey)
 
 // =========================================================================
 // MODULES
@@ -214,6 +224,47 @@ module battery() {
             cube([batt_l, batt_w, batt_h], center = true);
 }
 
+// ----- net geometry helpers ---------------------------------------------
+function net_x(i, n, span) = -span/2 + span * (i / n);
+// downward sag (catenary-ish): 0 at edges, -drop at centre
+function net_sag(i, j, n, drop) =
+    let (u = i/n - 0.5, v = j/n - 0.5)
+        -drop * (1 - 4*u*u) * (1 - 4*v*v);
+
+// strut between two 3D points
+module strut(p0, p1, d = net_strut_d) {
+    hull() {
+        translate(p0) sphere(d/2, $fn = 12);
+        translate(p1) sphere(d/2, $fn = 12);
+    }
+}
+
+// Deployed capture net: sagging square mesh + corner weights + tethers
+module capture_net() {
+    n  = net_cells;
+    sp = net_span;
+    cx = 40 + net_fwd;     // forward of belly
+    // mesh node position
+    function P(i, j) = [ cx + net_x(i, n, sp),
+                         net_x(j, n, sp),
+                         net_z + net_sag(i, j, n, net_drop) ];
+    color(C_NET) {
+        // cords along X and Y
+        for (i = [0 : n], j = [0 : n]) {
+            if (i < n) strut(P(i, j), P(i + 1, j));
+            if (j < n) strut(P(i, j), P(i, j + 1));
+        }
+    }
+    // corner weights (steel bolos)
+    color(C_DARK)
+        for (ci = [0, n], cj = [0, n])
+            translate(P(ci, cj)) sphere(11, $fn = 20);
+    // tethers from belly launcher to the two near corners
+    color([0.3, 0.3, 0.27])
+        for (cj = [0, n])
+            strut([40, net_x(cj, n, sp) * 0.4, -bay_h/2], P(0, cj), 2.4);
+}
+
 // =========================================================================
 // ASSEMBLY
 // =========================================================================
@@ -235,6 +286,7 @@ module talonet_drone() {
     netlauncher_bay();
     winch_release();
     if (show_cage) nest_cage();
+    if (show_net) capture_net();
 }
 
 talonet_drone();
