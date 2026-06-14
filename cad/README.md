@@ -8,6 +8,52 @@
 | 파일 | 설명 |
 |------|------|
 | `talonet_frame.scad` | X8 동축 옥토콥터 기체 전체 파라메트릭 모델 |
+| `forensic_appliance.scad` | **ForensIQ-1 사후 포렌식 기기** 파라메트릭 인클로저 (카드 삽입 → 분석 → 내장 프린터) |
+
+---
+
+## `forensic_appliance.scad` — ForensIQ-1 포렌식 기기
+
+포획한 적 드론의 microSD/SD를 **write-block 슬롯**에 꽂으면 `forensics/` 파이프라인이
+이미징→해시→파싱→항적/의도 분석 후 **내장 80mm 열전사 프린터**로 위협 인텔 리포트를
+출력하고 PDF를 증거 USB에 보관하는 **밀폐 키오스크**. 설계: [`docs/09`](../docs/09_Forensic_Appliance_Design.md),
+운용: [`docs/10`](../docs/10_Forensic_Appliance_Operator_Guide.md).
+
+> **설계 포인트(매니폴드):** 구멍이 필요한 앞면 피처(스크린 창·카드 슬롯·용지 배출구)는
+> **창이 내장된 자기완결형 솔리드**로 만들어 **몸체를 자른 뒤 union**으로 얹는다. 그래서
+> 패널 컷이 피처를 절대 먹지 않고 2-매니폴드를 유지한다.
+> 검증: `Simple: yes` (≈3,566 verts / 2,398 facets, OpenSCAD 2021.01).
+
+### 렌더
+```bash
+openscad -o appliance.stl cad/forensic_appliance.scad
+# 3/4 히어로 프리뷰 (헤드리스: xvfb-run)
+xvfb-run -a openscad -o hero.png --imgsize=1300,950 \
+    --camera=0,0,93,60,0,-120,1180 cad/forensic_appliance.scad
+```
+
+### 주요 파라미터 (Customizer)
+| 그룹 | 파라미터 | 기본값 | 의미 |
+|------|----------|--------|------|
+| Case body | `case_w/d/h` | 420/320/220 | 외형 폭/깊이/높이 mm |
+| | `wall_thk` / `edge_cham` | 6 / 10 | 벽 두께 / 러기드 모서리 챔퍼 |
+| | `lid_h` | 34 | 상단 클램셸 리드 밴드 |
+| Handle | `handle_d` / `handle_rise` | 22 / 46 | 캐리 핸들 바 직경 / 높이 |
+| Touchscreen | `screen_diag_in` / `screen_16_10` | 7 / true | 화면 대각(in) / 16:10 |
+| | `screen_bezel` | 10 | 베젤 폭 |
+| Write-blocker | `wb_block_w/h` | 96/66 | 라이트블로커 모듈 블록 |
+| | `usd_slot_w/h`, `sd_slot_w/h` | 16/3, 26/3.4 | microSD / SD 슬롯 |
+| Printer | `printer_bay_w/h`, `paper_slot_w/h`, `roll_od` | 118/96, 86/5, 70 | 프린터 베이 / 용지 배출 / 롤 |
+| Controls | `btn_dia`, `led_dia`, `led_count`, `keylock_dia` | 16, 7, 5, 20 | 버튼/LED/키락 |
+| Internals | `show_internals`, `lid_open`, `sbc_board_w/d`, `fan_dia` | true, 0, 100/80, 60 | 내부 매싱/익스플로드/SBC/팬 |
+| Rear | `vent_louvres` | 6 | 후면 통풍 루버 |
+
+### 모듈
+- `body()` / `lid()` / `carry_handle()` — 러기드 인클로저 + 리드 + 핸들
+- `bezel_window()` / `face_stud()` — **창 내장 베젤 프레임** / 양각 버튼·LED·키락 헬퍼
+- `front_features()` — 터치스크린 + 라이트블로커(슬롯+녹색 BLOCKED LED) + 프린터 배출구 + 컨트롤
+- `front_wall_cuts()` / `rear_ports()` / `rear_cuts()` — 앞면 창 관통 / 후면 포트·통풍
+- `internals()` — SBC + 라이트블로커 PCB + 80mm 프린터+용지롤 + 팬 + UPS
 
 ## 렌더 / 익스포트
 

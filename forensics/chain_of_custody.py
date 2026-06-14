@@ -1,10 +1,9 @@
 """Chain-of-custody record and append-only custody log.
 
-Integrity is the whole point of forensics, so this small piece *is* given a
-working (stdlib-only) implementation: an append-only log that hash-chains each
-event to the previous one (tamper-evident), mirroring the procedure in
-``docs/08_사후_포렌식.md`` §3. The heavyweight stages (imaging, parsing) remain
-interface-only until the next step.
+Integrity is the whole point of forensics, so this is a working (stdlib-only)
+append-only log that hash-chains each event to the previous one (tamper-evident),
+mirroring the procedure in ``docs/08_사후_포렌식.md`` §3. The pipeline records
+every stage here; the report bundles the log as an appendix.
 """
 
 from __future__ import annotations
