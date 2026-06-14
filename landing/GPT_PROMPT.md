@@ -1,44 +1,40 @@
-# GPT prompt — TaloNet landing page (image generation + build)
+# GPT prompt — TaloNet 랜딩페이지 (통 이미지 생성)
 
-> 사용법: 아래 **PROMPT** 블록을 통째로 ChatGPT(이미지 생성 가능한 모델)에 붙여넣으면, 배경용 사진 에셋을 생성하고 그 에셋을 깐 랜딩페이지(단일 `index.html`)를 만들어 준다. Devin도 동일 사양으로 이미 `landing/index.html`을 구현해 두었으니, GPT 결과물과 비교/대체용으로 쓰면 된다.
+> 사용법: 아래 **PROMPT** 블록을 통째로 ChatGPT(이미지 생성 모델)에 붙여넣으면, 코드가 아니라 **완성된 랜딩페이지 전체를 하나의 긴 세로 이미지**로 뽑아준다(실제 웹사이트 스크롤 스크린샷처럼). Devin은 이 이미지를 보고 똑같은 디자인으로 `landing/index.html`을 복제한다.
 
 ---
 
 ## PROMPT (copy-paste, English)
 
 ```
-You are a senior product designer + front-end engineer. Build a single-file,
-production-quality marketing landing page for a real defense-technology company.
-Do TWO things, in order:
+You are a senior product designer for a real defense-technology company.
+GENERATE ONE SINGLE, TALL, VERTICAL IMAGE of a COMPLETE marketing landing page
+— as if it were a full-length screenshot of a finished, scrollable website,
+top to bottom, in one continuous image. NOT code, NOT HTML, NOT separate asset
+tiles. Just one long, polished landing-page image with all sections stacked
+vertically. Render realistic UI chrome: nav bar, hero, body sections, square
+cards, a spec table, a contact form, and a footer, composed like a real
+product site. Aim for a tall aspect ratio (e.g. ~1440px wide, very tall).
 
-PART 1 — GENERATE PHOTOGRAPHIC BACKGROUND ASSETS
-Generate a set of cinematic, photo-realistic background images (NOT illustrations,
-NOT 3D renders, NOT AI-art clichés). They must look like real defense/aerospace
-photography shot on a full-frame camera. Desaturated, muted, documentary feel.
-Generate these assets:
-  1. hero.jpg (wide, 2400x1350) — a large multi-rotor counter-UAS interceptor
-     drone (octocopter, ~1m span, carbon-fibre, matte dark-grey) hovering against
-     an overcast dusk sky. Cold, flat light. Negative space on the right for text.
-  2. capture.jpg (wide, 2400x1350) — abstract close-up of a deployed catch-net /
-     kevlar mesh against blurred sky, shallow depth of field.
-  3. ops.jpg (wide, 2400x1350) — a dim ground-control / operations room, screens
-     out of focus, no readable text, no logos, no faces.
-  4. field.jpg (wide, 2400x1350) — open empty field / riverbed from above at
-     altitude, overcast, for the "safe-drop / disposal" section.
-Constraints for all images: muted military KHAKI + charcoal palette, no neon, no
-purple gradients, no lens flares, no text baked into the image, no people's faces,
-realistic grain, slightly underexposed. They are BACKGROUNDS, so they will sit
-behind a dark overlay — keep them low-contrast and uncluttered.
-
-PART 2 — BUILD THE LANDING PAGE (single index.html, inline CSS)
-Use the generated images as full-bleed section backgrounds with a dark scrim
-(linear-gradient overlay, ~55-75% opacity) so light text stays readable.
+The page must look like real, photographed defense/aerospace product marketing:
+cinematic, photo-realistic background photography (NOT illustration, NOT 3D
+render, NOT AI-art cliche), shot on a full-frame camera — desaturated, muted,
+documentary feel, realistic grain, slightly underexposed. Photographic
+backgrounds sit behind dark scrims (~55-75% opacity) so light text stays
+readable. Suggested backdrop per section: an octocopter counter-UAS
+interceptor hovering at overcast dusk (hero); a deployed kevlar catch-net
+close-up (capabilities); a dim ground-control operations room with
+out-of-focus screens (security); an empty field/riverbed from altitude
+(safe-disposal); a sterile forensic lab bench with a recovered drone and an
+extracted SD card (forensics). No neon, no purple gradients, no lens flares,
+no readable text baked into the photos, no faces.
 
 Brand: "TaloNet" — physical counter-UAS interception. A large mothership drone
 nets hostile drones and either recovers them to base or safely drops dangerous
 ones (e.g. kamikaze types) in unpopulated areas. NO jamming, NO spoofing, NO
 hacking — purely physical capture, plus a defensive on-board security stack
-(GNSS anti-spoofing, MAVLink command-link signing).
+(GNSS anti-spoofing, MAVLink command-link signing), plus lawful post-capture
+forensics on recovered drones.
 
 STRICT design rules:
 - Language: ENGLISH only.
@@ -60,32 +56,44 @@ STRICT design rules:
   AI marketing tone — serious, technical, confident, understated.
 - Tone: PROFESSIONAL. Not funny. No jokes, no slang.
 
-Make it LONG — a full landing page with these sections, in order:
+Make it LONG — a full landing page with these sections stacked top-to-bottom,
+in order:
   1. Sticky top nav (wordmark left "TALONET", anchor links, one khaki CTA
      "Request briefing").
-  2. Hero (hero.jpg bg): thin headline e.g. "Physical airspace defense.",
-     one-sentence subhead, two buttons (primary "Request briefing",
-     secondary "View capabilities"). Small spec strip below
+  2. Hero: thin headline e.g. "Physical airspace defense.", one-sentence
+     subhead, two buttons (primary "Request briefing", secondary "View
+     capabilities"). Small spec strip below
      (e.g. 120 km/h · 14 kg MTOW · 8 km radius · <90 s detect-to-deliver).
   3. Problem statement: short editorial paragraph on the small-drone threat +
      why kinetic/jamming answers fall short.
   4. "How it works" — 3 steps: Detect → Decide → Deliver (capture & recover, or
      capture & safe-drop). Square cards, hairline borders, numbered 01/02/03.
-  5. Capabilities (capture.jpg bg): grid of capability tiles (Net interception,
-     Onboard VLM threat classification, Sensor fusion, GNSS anti-spoofing,
-     Command-link signing, Safe disposal).
+  5. Capabilities: grid of capability tiles (Net interception, Onboard VLM
+     threat classification, Sensor fusion, GNSS anti-spoofing, Command-link
+     signing, Safe disposal).
   6. Platform spec table (the "Geulmae" mothership): clean two-column rows.
-  7. Defensive security band (ops.jpg bg): emphasize OSNMA GNSS authentication,
-     RAIM, MAVLink 2 message signing — "we don't attack, we harden."
-  8. Safe-disposal section (field.jpg bg): recover vs safe-drop logic.
-  9. Final CTA band: "Request a briefing" + simple square contact form
+  7. Defensive security band: emphasize OSNMA GNSS authentication, RAIM,
+     MAVLink 2 message signing — "we don't attack, we harden."
+  8. Safe-disposal section: recover vs safe-drop logic.
+  9. Post-capture forensics section: lawful forensic analysis of RECOVERED
+     drones — read-only SD-card / storage imaging with hash-verified chain of
+     custody, GPS & flight-log reconstruction (origin, route, intent), and
+     threat-intelligence reporting. Frame it soberly and explicitly: this is
+     NOT hacking. Intercepting a live system's comms is hacking; analyzing the
+     storage of a physically secured object is lawful forensics / security
+     investigation — turning captured devices into intelligence that prevents
+     future attacks. Lay it out as a clean tile / spec-row flow:
+     Image → Hash → Parse → Reconstruct route → Report.
+ 10. Final CTA band: "Request a briefing" + simple square contact form
      (name / organization / email, square inputs, khaki submit button).
- 10. Minimal footer: wordmark, short legal line, nav.
+ 11. Minimal footer: wordmark, short legal line, nav.
 
-Deliver ONE self-contained index.html with inline <style>, semantic HTML,
-responsive (mobile collapses the grids to one column), accessible contrast,
-and smooth-scroll anchor nav. Reference the generated images by the filenames
-above (./assets/hero.jpg etc.). Output only the code.
+OUTPUT: exactly ONE image — the entire landing page rendered top-to-bottom as a
+single tall vertical composition. Do NOT output code, HTML, CSS, or multiple
+separate images, and do NOT describe the page in text. Just produce the one
+long finished landing-page image. If a single generation cannot fit the full
+height, produce the tallest cohesive single image you can while keeping every
+section above visible and in order.
 ```
 
 ---
@@ -104,6 +112,8 @@ above (./assets/hero.jpg etc.). Output only the code.
 | 버튼 라운드 | `border-radius: 0` | 전 요소 직각 |
 
 ## 체크리스트 (납품 전 검수)
+- [ ] 출력은 **코드가 아니라 통 랜딩 이미지 1장**(긴 세로 구성, 섹션 순서 유지)
+- [ ] 사후 포렌식(SD카드/GPS 분석) 섹션 포함 — "해킹 아니라 합법 포렌식" 프레이밍
 - [ ] 영어만, 농담/이모지 없음, 전문적 톤
 - [ ] Inter 얇은 weight, 작은 대문자 eyebrow 라벨
 - [ ] 사진 에셋이 풀블리드 배경 + 어두운 스크림
