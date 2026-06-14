@@ -1,9 +1,12 @@
-"""Chain-of-custody record and append-only custody log.
+"""Intelligence-provenance (chain-of-custody) record and append-only log.
 
-Integrity is the whole point of forensics, so this is a working (stdlib-only)
-append-only log that hash-chains each event to the previous one (tamper-evident),
-mirroring the procedure in ``docs/08_사후_포렌식.md`` §3. The pipeline records
-every stage here; the report bundles the log as an appendix.
+A commander acting in self-defence must be able to TRUST the targeting
+intelligence, so every stage of the exploitation is recorded in a working
+(stdlib-only) append-only log that hash-chains each event to the previous one
+(tamper-evident), mirroring the procedure in ``docs/08_사후_포렌식.md`` §3. This
+is provenance/integrity for the intelligence product (not court evidence): if any
+record is altered after the fact, the chain breaks and verification fails. The
+pipeline records every stage here; the report bundles the log as an appendix.
 """
 
 from __future__ import annotations

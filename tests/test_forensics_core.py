@@ -116,10 +116,11 @@ class TestTextReport(unittest.TestCase):
         )
         text = format_text_report("EV5", findings, [{"timestamp": "t", "action": "intake",
                                   "actor": "op", "detail": "x"}])
-        self.assertIn("THREAT INTEL REPORT", text)
-        self.assertIn("CHAIN OF CUSTODY", text)
+        self.assertIn("COUNTER-UAS TARGET INTEL", text)
+        self.assertIn("HOSTILE LAUNCH SITE", text)
+        self.assertIn("INTELLIGENCE PROVENANCE", text)
         self.assertIn("ABCD1234", text)
-        self.assertIn("Confidence", text)
+        self.assertIn("Geo conf", text)
 
 
 # -- fakes for a dependency-free end-to-end pipeline run ----------------------

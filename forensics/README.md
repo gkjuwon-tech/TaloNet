@@ -1,13 +1,19 @@
-# `forensics/` — TaloNet post-capture forensics (architecture & interfaces)
+# `forensics/` — TaloNet counter-UAS exploitation
 
-> **Forensics, not intrusion.** Nothing here boots, talks to, jams, or spoofs a
-> device. This package analyses the storage/logs of an enemy drone that has been
-> **physically captured and safely secured** by the net interceptor — legal
-> post-incident analysis of seized property, the same ethically-clean posture as
-> the rest of TaloNet (`defense/` hardens *us*; `forensics/` reads what we caught).
+> **Exploitation, not intrusion.** Nothing here boots, talks to, jams, or spoofs a
+> device. This package exploits the storage/logs of a hostile drone that has been
+> **non-kinetically captured and secured** by the net interceptor to produce
+> **counter-UAS target intelligence** — chiefly the **hostile launch site** (with
+> an uncertainty radius) — supporting a proportionate, **human-authorized
+> self-defence** response. The adversary struck first; TaloNet only defended.
+> `defense/` hardens *us*; `forensics/` reads what we caught.
+>
+> **Intelligence only, not a fire order.** Every engagement decision remains with
+> the authorized commander under ROE and the Law of Armed Conflict (distinction,
+> proportionality, precautions; never civilians or civilian objects).
 
-Full pipeline, integrity / chain-of-custody procedure, and the verified
-open-source parser list live in [`docs/08_사후_포렌식.md`](../docs/08_사후_포렌식.md).
+Full pipeline, provenance procedure, and the verified open-source parser list
+live in [`docs/08_사후_포렌식.md`](../docs/08_사후_포렌식.md).
 
 ## Status
 

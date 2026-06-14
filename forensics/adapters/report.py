@@ -17,12 +17,16 @@ from datetime import datetime, timezone
 
 from ..interfaces import AnalysisFindings, ForensicReport, TrackPoint
 
-_BANNER = "TaloNet ForensIQ // POST-CAPTURE FORENSICS // LAWFUL-FORENSIC USE"
+_BANNER = "TaloNet ForensIQ // COUNTER-UAS EXPLOITATION // TARGET INTELLIGENCE"
 _DISCLAIMER = (
-    "Estimates are derived from recovered logs by verified open-source parsers "
-    "and carry a confidence score; they are investigative leads, not certainties. "
-    "Analysis is performed on physically-secured seized media (read-only, "
-    "hash-verified) under chain-of-custody."
+    "INTELLIGENCE PRODUCT, NOT A FIRE ORDER. Estimates are derived from the logs "
+    "of a non-kinetically captured hostile UAS by verified open-source parsers and "
+    "carry a confidence and an uncertainty radius; they are leads, not certainties. "
+    "This supports a PROPORTIONATE, HUMAN-AUTHORIZED self-defence response against "
+    "the source of the attack. EVERY engagement decision remains with the authorized "
+    "commander under the Rules of Engagement and the Law of Armed Conflict "
+    "(distinction, proportionality, precautions). Not for use against civilians or "
+    "civilian objects. Verify the launch site by independent means before any action."
 )
 
 
@@ -45,17 +49,26 @@ def format_text_report(
     tool_versions: dict[str, str] | None = None,
 ) -> str:
     """Plain-text rendering (thermal-printer / console friendly)."""
+    radius = (
+        f"  +/- {findings.launch_radius_m:.0f} m"
+        if findings.launch_radius_m is not None else ""
+    )
     L: list[str] = []
     L.append("=" * 40)
-    L.append("TaloNet ForensIQ - THREAT INTEL REPORT")
+    L.append("TaloNet ForensIQ - COUNTER-UAS TARGET INTEL")
     L.append("=" * 40)
     L.append(f"Evidence ID : {evidence_id}")
     L.append(f"Generated   : {_utc_now()}")
-    L.append(f"Confidence  : {findings.confidence:.2f} (0-1)")
+    L.append(f"Geo conf.   : {findings.confidence:.2f} (0-1)")
     L.append("-" * 40)
-    L.append("TRAJECTORY / INTENT")
-    L.append(f"  Launch est.: {_pt(findings.launch_estimate)}")
-    L.append(f"  Target est.: {_pt(findings.target_estimate)}")
+    L.append("HOSTILE LAUNCH SITE (COUNTER-UAS ORIGIN)")
+    L.append(f"  {_pt(findings.launch_estimate)}{radius}")
+    L.append("  >> actionable origin for proportionate, human-authorized response")
+    L.append("-" * 40)
+    L.append("INTENDED TARGET (DEFENDED ASSET)")
+    L.append(f"  {_pt(findings.target_estimate)}")
+    L.append("-" * 40)
+    L.append("TRAJECTORY / PATTERN OF LIFE")
     for line in findings.evidence_basis:
         L.append(f"  - {line}")
     if findings.identifiers:
@@ -71,7 +84,7 @@ def format_text_report(
     L.append(f"  files inventoried: {len(findings.file_inventory)}")
     L.append(f"  media records    : {len(findings.media_metadata)}")
     L.append("-" * 40)
-    L.append("CHAIN OF CUSTODY")
+    L.append("INTELLIGENCE PROVENANCE (hash-chained)")
     for ev in custody_log:
         L.append(
             f"  [{ev.get('timestamp', '')}] {ev.get('action', '')} "
@@ -86,7 +99,7 @@ def format_text_report(
         for k, v in tool_versions.items():
             L.append(f"  {k}: {v}")
     L.append("-" * 40)
-    L.append("NOTE: " + _DISCLAIMER)
+    L.append("CAVEAT: " + _DISCLAIMER)
     L.append("=" * 40)
     return "\n".join(L)
 
@@ -135,20 +148,28 @@ class PdfReportBuilder:
         pdf.cell(0, 4, _BANNER, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_text_color(0, 0, 0)
         pdf.set_font("Helvetica", "B", 17)
-        pdf.cell(0, 10, "Threat Intelligence Report", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 10, "Counter-UAS Target Intelligence Report",
+                 new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         body(f"Evidence ID: {evidence_id}    Generated: {_utc_now()}    "
-             f"Confidence: {findings.confidence:.2f}/1.0")
+             f"Geolocation confidence: {findings.confidence:.2f}/1.0")
         pdf.ln(2)
 
-        h("1. Executive Summary")
+        radius = (f" +/- {findings.launch_radius_m:.0f} m"
+                  if findings.launch_radius_m is not None else "")
+        h("1. Hostile Launch Site (Counter-UAS Origin)")
         body(
-            f"Estimated launch/origin: {_pt(findings.launch_estimate)}\n"
-            f"Estimated target/observation: {_pt(findings.target_estimate)}\n"
-            f"Assessment confidence: {findings.confidence:.2f} (0-1)."
+            f"HOSTILE LAUNCH SITE: {_pt(findings.launch_estimate)}{radius}\n"
+            f"Geolocation confidence: {findings.confidence:.2f} (0-1).\n"
+            "Actionable origin of the attack for a proportionate, human-authorized "
+            "self-defence response. Confirm by independent means before any action."
         )
         pdf.ln(1)
 
-        h("2. Trajectory & Intent")
+        h("2. Intended Target (Defended Asset)")
+        body(f"The hostile UAS was aimed at: {_pt(findings.target_estimate)}")
+        pdf.ln(1)
+
+        h("3. Trajectory & Pattern of Life")
         for line in findings.evidence_basis or ["no trajectory recovered"]:
             body(f"- {line}")
         if findings.map_html_path:
@@ -157,19 +178,19 @@ class PdfReportBuilder:
         pdf.ln(1)
 
         if findings.identifiers:
-            h("3. Identifiers (IFF / Attribution)")
+            h("4. Identifiers (IFF / Attribution)")
             for k, v in findings.identifiers.items():
                 body(f"- {k}: {v}")
             pdf.ln(1)
 
-        h("4. Content & Payload")
+        h("5. Content & Payload")
         for line in findings.payload_assessment or ["no content findings"]:
             body(f"- {line}")
         body(f"- files inventoried: {len(findings.file_inventory)}; "
              f"media records: {len(findings.media_metadata)}")
         pdf.ln(1)
 
-        h("5. Chain-of-Custody Appendix")
+        h("6. Intelligence Provenance (hash-chained)")
         for ev in custody_log:
             wit = f" / witness {ev['witness']}" if ev.get("witness") else ""
             body(f"[{ev.get('timestamp', '')}] {ev.get('action', '')} by "
@@ -177,12 +198,12 @@ class PdfReportBuilder:
         pdf.ln(1)
 
         if self.tool_versions:
-            h("6. Tooling & Provenance")
+            h("7. Tooling & Provenance")
             for k, v in self.tool_versions.items():
                 body(f"- {k}: {v}")
             pdf.ln(1)
 
-        h("Legal / Ethical Note")
+        h("Caveat - Rules of Engagement / Law of Armed Conflict")
         body(_DISCLAIMER)
 
         pdf.output(pdf_path)

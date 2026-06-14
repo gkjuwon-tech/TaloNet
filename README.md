@@ -78,8 +78,8 @@
 | [05. 방어 시스템](docs/05_방어_시스템.md) | 항법/링크 보안 (스푸핑·재밍·명령위조 방어) |
 | [06. 내부 회로 설계](docs/06_회로_설계.md) | 전력분배·FC·컴패니언·넷런처/윈치/릴리스·인터록 |
 | [07. 소프트웨어 기획](docs/07_소프트웨어_기획.md) | 귀환·모니터링·캡처/투하 버튼, HW 연동 SW 아키텍처 |
-| [08. 사후 포렌식](docs/08_사후_포렌식.md) | 포획한 적 드론 SD/GPS 합법 포렌식 (이미징→해시→파싱→항적/의도→리포트) |
-| [09. Forensic Appliance Design](docs/09_Forensic_Appliance_Design.md) | ForensIQ-1 현장 포렌식 기기 하드웨어 설계 (EN) |
+| [08. 사후 포렌식](docs/08_사후_포렌식.md) | 적 드론 SD/GPS 익스플로잇 → **적 발사지점 좌표**(정당방위 표적정보) |
+| [09. Forensic Appliance Design](docs/09_Forensic_Appliance_Design.md) | ForensIQ-1 카운터-UAS 익스플로잇 기기 하드웨어 설계 (EN) |
 | [10. Forensic Appliance Operator Guide](docs/10_Forensic_Appliance_Operator_Guide.md) | ForensIQ-1 운용 가이드 (EN) |
 | [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 + 포렌식 기기 (`cad/*.scad`) |
 
@@ -96,15 +96,16 @@
 
 출처·라이선스: [`defense/README.md`](defense/README.md) · 테스트: `python -m unittest discover -s tests` (47 passing)
 
-## 🔬 포렌식 코드 (`forensics/`)
+## 🔬 카운터-UAS 익스플로잇 (`forensics/`)
 
-잡아온 적 드론은 **자기 일기장을 들고 잡혀온** 셈. 해킹/침투가 아니라 **물리적으로 확보된 압류 물품**의 저장장치/로그를 **합법 포렌식**으로 읽는다 (`defense/`가 우리를 지킨다면, `forensics/`는 잡은 걸 분석한다):
+적이 **선빵**(악의적 자폭/정찰 드론)을 날렸고, 우리는 그물로 **수비(비살상 포획)만** 했다. 잡은 적 자산을 까서 **"이 새끼 어디서 쐈냐" = 적 발사지점 좌표(±오차반경)**를 뽑아 **정당방위 반격의 표적정보**를 만든다. 경찰 신고/법정 제출 ❌, **지휘관 표적 결심용 인텔** ⭕ (`defense/`가 우리를 지키면, `forensics/`는 잡은 걸 까서 출처를 짚는다):
 
-- **원본 불가침:** write-blocker 읽기전용 비트복사 + **SHA-256** 검증 + 원본 봉인 (부팅 금지 → 안티포렌식/자폭 회피). 해시 불일치 시 `IntegrityError`로 **중단**
+- **원본 불가침:** write-blocker 읽기전용 비트복사 + **SHA-256** 검증 (부팅 금지 → 안티포렌식/자폭 회피). 해시 불일치 시 `IntegrityError`로 **중단**
 - **검증 OSS 파서만(구현 완료):** ArduPilot `.bin`/`.tlog`(**pymavlink**) / PX4 `.ulg`(**pyulog**) / NMEA(**pynmea2**) / DJI(dji-log-parser) — 뇌피셜 파싱 금지
-- **항적·의도 분석:** GPS 항적 → 출발지/타깃(체공 감지) 추정 + **folium** 지도, 모든 추정에 신뢰도·근거 첨부(단정 금지)
-- **무결성/Chain-of-Custody:** append-only **해시체인** 커스터디 로그(변조 탐지)
-- **리포트:** **fpdf2 PDF** 위협 인텔 리포트 + 열전사(ESC/POS) 텍스트 + CoC 부록
+- **★ 발사지점 지오로케이션:** GPS 항적 → **적 발사좌표 + 오차반경(CEP) + 신뢰도** + 의도표적(체공) + **folium** 지도. 반복 출발지 교차 = 적 기지(패턴오브라이프)
+- **정보 무결성(provenance):** append-only **해시체인** 출처기록 → 지휘관이 믿고 쓸 수 있게
+- **리포트:** **fpdf2 PDF** 카운터-UAS 표적 인텔 패킷 + 열전사(ESC/POS) 텍스트 + provenance 부록
+- **⚠️ 정보 ≠ 발사명령:** 교전은 **인간 지휘관이 ROE/국제인도법(구별·비례·예방)** 하에 결정. 자동 타격 없음, 민간 대상 금지. 발사지점은 **독립 수단으로 교차검증**
 - **현장 기기:** `ForensicAppliance.process_card()` 한 방 → 카드 삽입~인쇄~증거USB 아카이브
 
 기획/파이프라인: [`docs/08_사후_포렌식.md`](docs/08_사후_포렌식.md) · 모듈: [`forensics/README.md`](forensics/README.md) (**구현·테스트 완료**, 무거운 라이브러리는 지연 import → 의존성 0으로도 import 가능) · 기기: [`docs/09`](docs/09_Forensic_Appliance_Design.md)·[`docs/10`](docs/10_Forensic_Appliance_Operator_Guide.md)

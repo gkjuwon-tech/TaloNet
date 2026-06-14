@@ -1,25 +1,35 @@
 # 10. ForensIQ-1 — Operator Guide
 
-**TaloNet ForensIQ-1 Field Forensic Appliance — Operator's Manual**
-Document type: field operating procedure · Audience: trained forensic operators
-Read [§1 Safety & Legal](#1-safety--legal-notice) before first use.
+**TaloNet ForensIQ-1 Counter-UAS Exploitation Appliance — Operator's Manual**
+Document type: field operating procedure · Audience: trained exploitation operators
+Output: counter-UAS **target intelligence** for a human-authorized, ROE/LOAC-bound
+response — **the appliance does not engage.** Read §1 before first use.
 
 ---
 
-## 1. Safety & Legal Notice
+## 1. Safety, Legal & Control Notice
 
-- **Lawful forensics only.** ForensIQ-1 is for read-only analysis of storage
-  media from drones that have been **physically captured and secured** under
-  proper authority. It is **not** an intrusion, jamming, or interception tool.
-- **Never boot the seized device.** Remove the storage card and read it **only**
+- **Intelligence tool, not a weapon.** ForensIQ-1 performs read-only exploitation
+  of storage media from hostile drones that have been **non-kinetically captured
+  and secured** under proper authority. It produces **counter-UAS target
+  intelligence** (chiefly the hostile launch site). It is **not** an intrusion,
+  jamming, or interception tool, and it **does not engage anything**.
+- **Human decides, under ROE/LOAC.** The launch-site geolocation is a **lead with
+  a confidence and an uncertainty radius**, to inform a **proportionate,
+  human-authorized self-defence response** by the command/fires cell. Whether,
+  how, and when to act is a **commander's decision** under the Rules of Engagement
+  and the Law of Armed Conflict — distinction, proportionality, precautions;
+  **never** civilians or civilian objects. **Corroborate the launch site by
+  independent means before any action.**
+- **Never boot the captured device.** Remove the storage card and read it **only**
   through the WRITE-BLOCKED slot. Hostile firmware may wipe or self-destruct if
   powered in an unauthorized environment.
-- **Never insert a seized card into any non–write-blocked port** (e.g. a bare
+- **Never insert a captured card into any non–write-blocked port** (e.g. a bare
   USB reader). If in doubt, stop.
-- **Two-person integrity.** Acquisition, hashing, and sealing are performed with
-  an operator **and** a witness; both sign the chain-of-custody record.
-- **Preserve the original.** All analysis runs on a verified copy. The original
-  card is sealed and returned to evidence storage immediately after imaging.
+- **Two-person integrity.** Acquisition, hashing, and handoff are performed with
+  an operator **and** a witness; both sign the provenance record.
+- **Preserve the original.** All exploitation runs on a verified copy. The
+  original card is sealed and retained immediately after imaging.
 - **Electrical safety.** Use the supplied AC/DC inlet; the internal UPS enables a
   clean shutdown — do not yank power mid-acquisition.
 
@@ -81,44 +91,46 @@ Tap **New Case** and enter:
 - **Witness**,
 - **Device description** (card type, capacity, markings/serial, photo).
 
-This opens the **chain-of-custody** record (an append-only, hash-chained log).
+This opens the **provenance** record (an append-only, hash-chained log).
 
 ### 4.4 Insert the card — confirm WRITE-BLOCKED
-Insert the seized **microSD** or **SD** card into the labelled WRITE-BLOCKER
+Insert the captured **microSD** or **SD** card into the labelled WRITE-BLOCKER
 slot. **Verify the WRITE-BLOCKED LED is solid green** before continuing.
 > If the LED is **not green**, remove the card and STOP — do not analyze.
 
 ### 4.5 Acquire (image + verify)
 Press **START**. The appliance makes a read-only copy to the internal SSD and
 computes **SHA-256** of both the source and the image.
-- **Hashes match** → acquisition verified; analysis proceeds.
+- **Hashes match** → acquisition verified; exploitation proceeds.
 - **Hashes differ** → the run **halts** with an integrity error (see §8). Re-image.
 
-### 4.6 Automatic analysis
+### 4.6 Automatic exploitation
 The pipeline runs unattended:
 - **Content / metadata** — file inventory (hashed), media EXIF, device
-  identifiers (FCC ID / serial / MAC).
+  identifiers (FCC ID / serial / MAC) for attribution.
 - **Flight-log parsing** — auto-detected and parsed by verified open-source
   parsers: ArduPilot `.bin`/`.tlog` (pymavlink), PX4 `.ulg` (pyulog), NMEA
   (pynmea2), DJI (dji-log-parser).
-- **Trajectory & intent** — reconstructs the track and estimates the **launch**
-  point and **target/observation** area (longest loiter), each with a
-  **confidence score**.
+- **Launch-site geolocation & intent** — estimates the **HOSTILE LAUNCH SITE**
+  (origin of the attack) with an **uncertainty radius** and **confidence**, plus
+  the **intended target** (defended asset) and pattern of life.
 
 ### 4.7 Review on screen
-Inspect the **map**, the launch/target estimates and confidence, identifiers,
-and the file/media summary. Confidence is an investigative weighting — **not a
-certainty** (see §5).
+Inspect the **map** (launch site + uncertainty circle), the launch/target
+estimates, confidence, identifiers, and the file/media summary. Confidence is a
+geolocation weighting — **not a certainty** (see §5).
 
-### 4.8 Print the report
-Tap **Print Report**. The **built-in thermal printer** prints the threat-intel
-report plus the **chain-of-custody appendix**. The full **PDF** (with the
-trajectory map) is automatically archived to the **Evidence USB**.
+### 4.8 Print the target packet
+Tap **Print Report**. The **built-in thermal printer** prints the **counter-UAS
+target-intelligence packet** (launch site first), the **provenance appendix**,
+and the **ROE/LOAC caveat**. The full **PDF** (with the map) is automatically
+archived to the **Evidence USB**.
 
-### 4.9 Eject, seal, close
+### 4.9 Eject, seal, hand off
 Press **EJECT**, remove the card, apply a **tamper seal**, and have the operator
-and witness sign. Tap **Close Case** — the seal event is appended to the custody
-log and the case is finalized.
+and witness sign. Tap **Close Case** — the seal event is appended to the
+provenance log. The packet is handed to the **authorized command/fires cell**,
+which decides any response under ROE/LOAC. **The appliance does not engage.**
 
 ---
 
@@ -126,18 +138,21 @@ log and the case is finalized.
 
 | Section | Meaning |
 |---|---|
-| **Header** | Evidence ID, UTC generation time, overall confidence (0–1). |
-| **Executive summary** | Estimated launch/origin and target/observation point. |
-| **Trajectory & intent** | Parser provenance, path length, launch→target range/bearing, operating-area bounding box, loiter evidence. |
-| **Identifiers (IFF)** | Recovered FCC ID / serial / MAC, for attribution. |
-| **Content & payload** | File inventory count, media metadata, altitude profile. |
-| **Chain-of-custody appendix** | Every step, actor, witness, and timestamp. |
-| **Tooling & provenance** | Exact parser/library versions used. |
+| **Header** | Evidence ID, UTC generation time, geolocation confidence (0–1). |
+| **1. Hostile launch site** | The actionable **origin of the attack**: coordinates **± uncertainty radius**, confidence. Corroborate before any action. |
+| **2. Intended target** | The defended asset the hostile UAS was aimed at. |
+| **3. Trajectory & pattern of life** | Parser provenance, ingress path, launch→target range/bearing (+ back-azimuth), operating-area box, loiter, recurring-origin note. |
+| **4. Identifiers (IFF)** | Recovered FCC ID / serial / MAC, for attribution. |
+| **5. Content & payload** | File inventory count, media metadata, altitude profile. |
+| **6. Provenance appendix** | Every step, actor, witness, timestamp (hash-chained). |
+| **7. Tooling** | Exact parser/library versions used. |
+| **Caveat (ROE/LOAC)** | Intelligence product, **not a fire order**; engagement is a human decision under ROE/LOAC; not against civilians/civilian objects. |
 
-> **All estimates carry a confidence and an evidence basis. Nothing is asserted
-> as certainty.** Launch/target are leads for an analyst, derived only from what
-> the recovered logs contain; GPS multipath, log corruption, or partial data
-> widen uncertainty.
+> **Every estimate carries a confidence and an uncertainty radius. Nothing is
+> asserted as certainty.** The launch site is a **lead** for the command/fires
+> cell, derived only from what the recovered logs contain; GPS multipath, log
+> corruption, or partial data widen the radius — **corroborate by independent
+> means before any response.**
 
 ---
 
@@ -178,19 +193,22 @@ log and the case is finalized.
 | **Hash mismatch (integrity error)** | The image does not match the source. **STOP**, re-seat the card, and re-image. Persistent mismatch ⇒ failing card/reader; document and escalate. |
 | **"Unsupported log format"** | The log is not a recognized ArduPilot/PX4/NMEA/DJI type, or DJI logs are encrypted and need the dji-log-parser key. Export the raw files via Evidence USB for offline analysis; record the limitation in the report. |
 | **Printer out of paper / jam** | Reload the 80 mm roll (§6). The PDF is already on the Evidence USB; reprint from the case screen. |
-| **Low confidence / no fixes** | Few/no GPS fixes were recovered. The report notes this; treat launch/target as weak leads and corroborate with other evidence. |
+| **Low confidence / large uncertainty radius** | Few/scattered GPS fixes near takeoff. The launch site is a **weak lead with a wide radius** — do **not** act on it alone; corroborate by independent means or hold for better data. |
 | **No Evidence USB detected** | Insert a write-once USB in the rear port and reprint/re-export; the PDF is retained on the internal SSD until exported. |
 
 ---
 
-## 9. Chain-of-custody & evidence handling (appendix)
+## 9. Intelligence provenance & handling (appendix)
 
-- Open the custody record **before** inserting the card; close it only after
+- Open the provenance record **before** inserting the card; close it only after
   sealing.
 - The log is **append-only and hash-chained** — any later edit breaks the chain
-  and is detected on verification.
+  and is detected on verification, so the command/fires cell can **trust** the
+  launch-site geolocation.
 - Record every hand-off (time, from, to, reason, signatures).
-- Keep the original card sealed; perform all analysis on the verified copy.
-- Export the report PDF + custody log to write-once media; retain per policy.
+- Keep the original card sealed; perform all exploitation on the verified copy.
+- Export the target packet PDF + provenance log to write-once media; retain per
+  policy. Engagement decisions are made downstream by the authorized commander
+  under ROE/LOAC — **the appliance and operator produce intelligence only.**
 
 > Pipeline internals: [docs/08](08_사후_포렌식.md) · hardware: [docs/09](09_Forensic_Appliance_Design.md) · software: [`forensics/`](../forensics/).

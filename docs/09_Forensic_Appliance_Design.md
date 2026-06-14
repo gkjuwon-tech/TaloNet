@@ -1,12 +1,20 @@
-# 09. ForensIQ-1 — Forensic Appliance Hardware Design
+# 09. ForensIQ-1 — Counter-UAS Exploitation Appliance (Hardware Design)
 
-> **TaloNet ForensIQ-1** is a sealed, benchtop/field **forensic kiosk**. An
-> operator removes the microSD/SD card from a drone that the TaloNet net
-> interceptor has **physically captured and secured**, inserts it into a
-> **write-blocked** slot, and the appliance runs the TaloNet forensics pipeline
-> (`forensics/`, [docs/08](08_사후_포렌식.md)) and **prints a threat-intelligence
-> report on a built-in thermal printer**, archiving the full PDF to a write-once
-> Evidence USB. Nothing on the card is booted, modified, or transmitted to.
+> **TaloNet ForensIQ-1** is a sealed, benchtop/field **counter-UAS exploitation
+> kiosk**. An operator removes the microSD/SD card from a hostile drone that the
+> TaloNet net interceptor has **non-kinetically captured and secured**, inserts it
+> into a **write-blocked** slot, and the appliance runs the TaloNet exploitation
+> pipeline (`forensics/`, [docs/08](08_사후_포렌식.md)) to geolocate the **hostile
+> launch site** and **print a counter-UAS target-intelligence report on a built-in
+> thermal printer**, archiving the full PDF to a write-once Evidence USB. Nothing
+> on the card is booted, modified, or transmitted to.
+>
+> The product is **target intelligence to support a proportionate,
+> human-authorized self-defence response** against the source of an attack the
+> adversary initiated — **not a fire order**, and not autonomous engagement. Every
+> engagement decision remains with the authorized commander under the Rules of
+> Engagement and the Law of Armed Conflict (distinction, proportionality,
+> precautions; never civilians or civilian objects).
 >
 > Mechanical model: [`cad/forensic_appliance.scad`](../cad/forensic_appliance.scad).
 > Operator manual: [docs/10](10_Forensic_Appliance_Operator_Guide.md).
@@ -17,9 +25,10 @@
 
 | | |
 |---|---|
-| **In scope** | Read-only acquisition and analysis of the **non-volatile storage** (microSD/SD, and via adapter eMMC/USB) of an enemy drone that is **already physically secured**. |
-| **Out of scope (forbidden)** | Booting the seized device, writing to it, real-time interception, jamming, spoofing, or reaching any *other* system. |
-| **Ethical/legal basis** | This is lawful post-incident **forensics on seized property**, consistent with the project's *Clean Defense* posture: non-kinetic physical capture, no RF jamming/spoofing, analysis confined to media under chain-of-custody. Real-time intrusion would be "hacking"; offline analysis of secured evidence is "forensics." |
+| **In scope** | Read-only acquisition and exploitation of the **non-volatile storage** (microSD/SD, and via adapter eMMC/USB) of a hostile drone that is **already physically secured**; output is **counter-UAS target intelligence** (chiefly the hostile launch site with an uncertainty radius). |
+| **Out of scope (forbidden)** | Booting the seized device, writing to it, real-time interception, jamming, spoofing, reaching any *other* system, or any **autonomous engagement / automated targeting**. |
+| **Basis (self-defence)** | The adversary struck first with hostile intent; TaloNet only **defended** (non-kinetic capture, no first strike, no RF jamming/spoofing). Geolocating the **source of that attack** for a proportionate response is a legitimate **self-defence / counter-UAS targeting** function — offline technical exploitation of secured hardware (TECHINT/DOMEX), not real-time intrusion. |
+| **Human control (ROE/LOAC)** | The appliance produces **intelligence only**. Whether, how, and when to engage is a **human commander's decision** under the Rules of Engagement and the Law of Armed Conflict — distinction, proportionality, precautions; never civilians or civilian objects. Estimates carry confidence + an uncertainty radius and must be corroborated. |
 | **Anti-forensic safety** | The card is **never powered as a bootable device** — it is read behind a hardware **write-blocker** so a hostile firmware's "unauthorized-environment → wipe/self-destruct" logic is never triggered. |
 
 ---
@@ -91,21 +100,24 @@ the write-once Evidence USB only.
 ## 5. Data & print flow
 
 ```
-1. INSERT  seized card into the WRITE-BLOCKED slot (green LED confirms read-only)
+1. INSERT  captured card into the WRITE-BLOCKED slot (green LED confirms read-only)
 2. IMAGE   read-only bit/logical copy to the internal SSD  (forensics DiskImager)
 3. HASH    SHA-256 of source vs image — must match, else STOP (IntegrityError)
 4. PARSE   content + flight logs: pymavlink (.bin/.tlog), pyulog (.ulg),
            pynmea2 (NMEA), dji-log-parser (DJI)
-5. ANALYZE trajectory + intent: launch / target (loiter) estimate, folium map
-6. REPORT  fpdf2 threat-intel PDF + thermal text report
-7. OUTPUT  -> built-in thermal printer (report + chain-of-custody appendix)
-           -> write-once Evidence USB (full PDF + map)
-8. SEAL    eject card, apply tamper seal, sign — case closed in the custody log
+5. ANALYZE HOSTILE LAUNCH SITE (origin) + uncertainty radius + confidence;
+           intended target (loiter); folium map  (trajectory.py)
+6. REPORT  fpdf2 counter-UAS target-intel PDF + thermal text report
+7. OUTPUT  -> built-in thermal printer (target packet + provenance appendix +
+              ROE/LOAC caveat) -> write-once Evidence USB (full PDF + map)
+8. HANDOFF eject card, seal; the packet goes to the authorized command/fires cell,
+           which decides any response under ROE/LOAC (the appliance does not engage)
 ```
 
-Every step is appended to a tamper-evident **hash-chained chain-of-custody log**
-(`forensics.ChainOfCustody`); the report bundles that log as an appendix. The
-high-level call is a single `forensics.ForensicAppliance.process_card(...)`.
+Every step is appended to a tamper-evident **hash-chained provenance log**
+(`forensics.ChainOfCustody`) so the commander can trust the intelligence; the
+report bundles that log as an appendix. The high-level call is a single
+`forensics.ForensicAppliance.process_card(...)`.
 
 ---
 
@@ -129,10 +141,14 @@ button/LED/key-lock sizes, SBC board, fan, vents). See
 
 ---
 
-## 7. Security & integrity properties
-- **One-way read path:** no electrical route writes the seized card.
+## 7. Security, integrity & control properties
+- **One-way read path:** no electrical route writes the captured card.
 - **Verified copy:** acquisition is rejected unless source/image SHA-256 match.
-- **Tamper-evident audit:** append-only hash-chained custody log; encrypted SSD.
+- **Tamper-evident provenance:** append-only hash-chained log; encrypted SSD — so
+  the commander can trust the launch-site geolocation.
+- **Intelligence only / human-in-the-loop:** the appliance never engages; it emits
+  a target packet with confidence + uncertainty radius and an explicit ROE/LOAC
+  caveat. Engagement is a human decision (distinction, proportionality, precautions).
 - **Airgap default:** no radio; Ethernet only for signed updates / controlled export.
 - **Two-person integrity & sealing:** keyed lock + tamper seals; operator + witness.
 

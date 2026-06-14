@@ -1,11 +1,19 @@
-"""TaloNet post-capture forensics package.
+"""TaloNet post-capture counter-UAS exploitation package.
 
-Analyses the storage/logs of an enemy drone that has been **physically captured
-and safely secured** by the TaloNet net interceptor. This is legal post-incident
-forensics on seized property — NOT real-time intrusion, jamming, or spoofing.
-See ``docs/08_사후_포렌식.md`` for the pipeline, integrity / chain-of-custody
-procedure and the verified open-source parsers each adapter wraps, and
-``docs/09``/``docs/10`` for the ForensIQ-1 appliance that runs it.
+Exploits the storage/logs of a hostile drone that has been **physically captured
+and safely secured** (non-kinetically, by the TaloNet net interceptor) to produce
+**counter-UAS target intelligence** — chiefly the hostile **launch site** — that
+supports a proportionate, human-authorized **self-defence** response against the
+source of the attack. The adversary struck first with hostile intent; TaloNet
+only defended (capture, no first strike) and never jams or spoofs.
+
+This is offline technical exploitation of secured hardware — NOT real-time
+intrusion, jamming, or spoofing. It produces *intelligence only*; every
+engagement decision remains with the authorized commander under the Rules of
+Engagement and the Law of Armed Conflict (distinction, proportionality,
+precautions; never civilians or civilian objects). See ``docs/08_사후_포렌식.md``
+for the pipeline and provenance procedure, and ``docs/09``/``docs/10`` for the
+ForensIQ-1 appliance that runs it.
 
 The public surface is the stage interfaces (:mod:`forensics.interfaces`), the
 chain-of-custody log, the ``ForensicPipeline`` orchestrator, the concrete

@@ -93,9 +93,14 @@ class FlightTrack:
 class AnalysisFindings:
     """Human-reviewable conclusions; every estimate carries a confidence."""
 
+    # Hostile launch/origin site — the COUNTER-UAS interest (where the attack
+    # came from). This is the actionable geolocation for a proportionate,
+    # human-authorized self-defence response under ROE/LOAC.
     launch_estimate: Optional[TrackPoint] = None
+    launch_radius_m: Optional[float] = None  # geolocation uncertainty radius (CEP-like)
+    # Intended target — the friendly/defended asset the hostile UAS was aimed at.
     target_estimate: Optional[TrackPoint] = None
-    confidence: float = 0.0  # 0..1, NEVER asserted as certainty
+    confidence: float = 0.0  # 0..1 geolocation confidence, NEVER a certainty
     media_metadata: list[dict[str, str]] = field(default_factory=list)
     payload_assessment: list[str] = field(default_factory=list)
     identifiers: dict[str, str] = field(default_factory=dict)  # IFF / attribution
@@ -107,6 +112,8 @@ class AnalysisFindings:
         """Combine two findings (e.g. content + trajectory) into one."""
         return AnalysisFindings(
             launch_estimate=self.launch_estimate or other.launch_estimate,
+            launch_radius_m=self.launch_radius_m
+            if self.launch_radius_m is not None else other.launch_radius_m,
             target_estimate=self.target_estimate or other.target_estimate,
             confidence=max(self.confidence, other.confidence),
             media_metadata=self.media_metadata + other.media_metadata,

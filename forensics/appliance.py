@@ -1,14 +1,17 @@
 """High-level appliance workflow for the TaloNet ForensIQ-1 kiosk.
 
 Ties the default verified-OSS adapters into one call the operator UI invokes
-after a seized card is inserted into the write-blocked slot:
+after a captured hostile card is inserted into the write-blocked slot:
 
     insert card -> image + SHA-256 verify -> content/log analysis ->
-    trajectory/intent -> threat-intel report -> print (built-in printer) +
-    archive PDF/map/text to the write-once Evidence USB -> eject + seal.
+    launch-site geolocation + intent -> counter-UAS target-intel report ->
+    print (built-in printer) + archive PDF/map/text to the write-once
+    Evidence USB -> eject + seal.
 
-Everything runs read-only on the seized media and is chain-of-custody logged.
-``process_card`` returns the built report and its custody chain.
+Everything runs read-only on the captured media and is provenance-logged. The
+product is target INTELLIGENCE for a proportionate, human-authorized self-defence
+response under ROE/LOAC — not a fire order. ``process_card`` returns the built
+report and its provenance chain.
 """
 
 from __future__ import annotations

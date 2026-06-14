@@ -1,16 +1,26 @@
-"""Trajectory reconstruction + launch/target intent estimation.
+"""Trajectory reconstruction + hostile launch-site geolocation.
 
-Consumes parsed :class:`~forensics.interfaces.FlightTrack` objects and produces
-explainable :class:`~forensics.interfaces.AnalysisFindings`:
+Consumes parsed :class:`~forensics.interfaces.FlightTrack` objects from a
+non-kinetically captured hostile UAS and produces explainable
+:class:`~forensics.interfaces.AnalysisFindings` for **counter-UAS target
+intelligence** (proportionate self-defence against the source of the attack):
 
-- **Launch estimate:** the recorded home/origin, else the first valid fix.
-- **Target estimate:** the centroid of the longest loiter/dwell (strongest
-  "observed here" signal), else the last fix.
-- **Confidence:** a transparent heuristic — NEVER asserted as certainty — with
-  the contributing factors recorded in ``evidence_basis``.
+- **Hostile launch site (counter-UAS origin):** the recorded home/origin, else
+  the first valid fix — the actionable geolocation of where the attack came from,
+  with a CEP-like **uncertainty radius** so the authorized commander can apply
+  distinction/proportionality and avoid collateral damage.
+- **Intended target:** the centroid of the longest loiter/dwell (the defended
+  asset the hostile UAS was aimed at), else the last fix.
+- **Confidence:** a transparent geolocation heuristic — NEVER a certainty — with
+  contributing factors recorded in ``evidence_basis``.
 
 The analysis core is dependency-free (uses :mod:`forensics.geo`); only the
 optional HTML map renderer pulls in **folium** (Leaflet/OSM), imported lazily.
+
+This module produces *intelligence only*. Every engagement decision remains with
+the authorized commander under the Rules of Engagement and the Law of Armed
+Conflict (distinction, proportionality, precautions). Not for use against
+civilians or civilian objects.
 """
 
 from __future__ import annotations
@@ -45,22 +55,28 @@ class TrajectoryReconstructor:
         bbox = geo.bounding_box(pts)
         straight = geo.haversine_m(launch.lat, launch.lon, target.lat, target.lon)
         course = geo.bearing_deg(launch.lat, launch.lon, target.lat, target.lon)
+        launch_radius = self._launch_radius_m(launch, primary.points)
 
         findings.launch_estimate = launch
+        findings.launch_radius_m = launch_radius
         findings.target_estimate = target
         findings.confidence = self._confidence(primary, dwell is not None)
         findings.evidence_basis.extend(
             [
                 f"primary track: {primary.source_format} via {primary.parser} "
                 f"({len(primary.points)} fixes)",
-                f"launch est. = {'home/origin' if primary.home_position else 'first fix'} "
-                f"@ {launch.lat:.6f},{launch.lon:.6f}",
-                f"target est. = {'longest loiter' if dwell else 'last fix'} "
+                f"HOSTILE LAUNCH SITE (counter-UAS origin) = "
+                f"{'home/origin' if primary.home_position else 'first fix'} "
+                f"@ {launch.lat:.6f},{launch.lon:.6f} "
+                f"(uncertainty ~{launch_radius:.0f} m)",
+                f"intended target (defended asset) = {'longest loiter' if dwell else 'last fix'} "
                 f"@ {target.lat:.6f},{target.lon:.6f}"
                 + (f" ({dwell.sample_count} samples loitering)" if dwell else ""),
-                f"path length ~{length_m / 1000:.2f} km; "
+                f"ingress path ~{length_m / 1000:.2f} km; "
                 f"launch->target straight-line ~{straight / 1000:.2f} km "
-                f"on bearing ~{course:.0f}deg",
+                f"on bearing ~{course:.0f}deg (back-azimuth ~{(course + 180) % 360:.0f}deg)",
+                "correlate launch site with prior captures for recurring origin "
+                "(enemy basing / pattern of life)",
             ]
         )
         if bbox:
@@ -84,15 +100,20 @@ class TrajectoryReconstructor:
         folium.PolyLine(pts, weight=3, opacity=0.8, color="#86855F").add_to(fmap)
 
         launch = primary.home_position or primary.points[0]
+        radius = self._launch_radius_m(launch, primary.points)
+        folium.Circle(
+            [launch.lat, launch.lon], radius=radius, color="#b02828",
+            fill=True, fill_opacity=0.15, tooltip="Launch-site uncertainty",
+        ).add_to(fmap)
         folium.Marker(
-            [launch.lat, launch.lon], tooltip="Launch (estimated)",
-            icon=folium.Icon(color="green", icon="play"),
+            [launch.lat, launch.lon], tooltip="HOSTILE LAUNCH SITE (counter-UAS origin)",
+            icon=folium.Icon(color="red", icon="flag"),
         ).add_to(fmap)
         dwell = geo.longest_dwell(pts, self.loiter_radius_m)
         target = (dwell.lat, dwell.lon) if dwell else (pts[-1][0], pts[-1][1])
         folium.Marker(
-            list(target), tooltip="Target / observation (estimated)",
-            icon=folium.Icon(color="red", icon="screenshot"),
+            list(target), tooltip="Intended target (defended asset)",
+            icon=folium.Icon(color="blue", icon="screenshot"),
         ).add_to(fmap)
         if bbox:
             fmap.fit_bounds([[bbox.min_lat, bbox.min_lon], [bbox.max_lat, bbox.max_lon]])
@@ -104,6 +125,21 @@ class TrajectoryReconstructor:
     def _primary(tracks: list[FlightTrack]) -> FlightTrack | None:
         usable = [t for t in tracks if t.points]
         return max(usable, key=lambda t: len(t.points)) if usable else None
+
+    @staticmethod
+    def _launch_radius_m(launch: TrackPoint, points: list[TrackPoint]) -> float:
+        """CEP-like uncertainty radius for the launch-site geolocation.
+
+        Dispersion of the first samples about the launch estimate (the drone is
+        still near its origin at takeoff). A larger radius => less precise origin
+        => the commander must widen precautions / hold for better data.
+        """
+        head = points[: min(8, len(points))]
+        spread = max(
+            (geo.haversine_m(launch.lat, launch.lon, p.lat, p.lon) for p in head),
+            default=0.0,
+        )
+        return round(max(spread, 15.0), 1)  # floor at GNSS-grade ~15 m
 
     @staticmethod
     def _confidence(track: FlightTrack, has_dwell: bool) -> float:
