@@ -78,6 +78,7 @@
 | [05. 방어 시스템](docs/05_방어_시스템.md) | 항법/링크 보안 (스푸핑·재밍·명령위조 방어) |
 | [06. 내부 회로 설계](docs/06_회로_설계.md) | 전력분배·FC·컴패니언·넷런처/윈치/릴리스·인터록 |
 | [07. 소프트웨어 기획](docs/07_소프트웨어_기획.md) | 귀환·모니터링·캡처/투하 버튼, HW 연동 SW 아키텍처 |
+| [08. 사후 포렌식](docs/08_사후_포렌식.md) | 포획한 적 드론 SD/GPS 합법 포렌식 (이미징→해시→파싱→항적/의도→리포트) |
 | [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 (`cad/talonet_frame.scad`) |
 
 ## 🛡️ 방어 코드 (`defense/`)
@@ -93,6 +94,18 @@
 
 출처·라이선스: [`defense/README.md`](defense/README.md) · 테스트: `python -m unittest discover -s tests` (47 passing)
 
+## 🔬 포렌식 코드 (`forensics/`)
+
+잡아온 적 드론은 **자기 일기장을 들고 잡혀온** 셈. 해킹/침투가 아니라 **물리적으로 확보된 압류 물품**의 저장장치/로그를 **합법 포렌식**으로 읽는다 (`defense/`가 우리를 지킨다면, `forensics/`는 잡은 걸 분석한다):
+
+- **원본 불가침:** write-blocker 읽기전용 + **SHA-256** 해시 + 원본 봉인 (부팅 금지 → 안티포렌식/자폭 회피)
+- **검증 OSS 파서만:** ArduPilot `.bin`(pymavlink) / PX4 `.ulg`(pyulog) / NMEA(pynmea2) / DJI(dji-log-parser) — 뇌피셜 파싱 금지
+- **항적·의도 분석:** GPS 항적 → 출발지/타깃 추정(gpxpy/folium), 모든 추정에 신뢰도·근거 첨부
+- **무결성/Chain-of-Custody:** append-only **해시체인** 커스터디 로그(`forensics/chain_of_custody.py`, 동작)
+- **리포트:** 위협 인텔 리포트(자산화) + CoC 부록
+
+기획: [`docs/08_사후_포렌식.md`](docs/08_사후_포렌식.md) · 모듈: [`forensics/README.md`](forensics/README.md) (현재 **인터페이스/아키텍처 단계**, 어댑터 구현은 다음 스텝)
+
 ---
 
 ## ⚖️ 윤리 한 줄 (가장 중요)
@@ -106,12 +119,13 @@
 
 - [x] 기획 / 문서
 - [x] 방어 코드 (`defense/` 항법·링크 보안, 검증된 OSS 기반)
-- [x] OpenSCAD 파라메트릭 기체 모델 (`cad/talonet_frame.scad`)
-- [x] 내부 회로 설계 (docs/06)
-- [x] 소프트웨어 기획 — HW 연동 SW (docs/07) (← 지금 여기)
+- [x] OpenSCAD 파라메트릭 기체 모델 (`cad/talonet_frame.scad`) — 그물 입구 조임(cinch) 구동장치 포함
+- [x] 내부 회로 설계 (docs/06) — 시닝 모터(입구 조임) + 윈치(상하) 2단 결속 반영
+- [x] 소프트웨어 기획 — HW 연동 SW (docs/07)
+- [x] 사후 포렌식 기획 + 모듈 아키텍처/인터페이스 (docs/08, `forensics/`) (← 지금 여기)
 - [ ] 회로도(KiCad) / 하네스 / PCB 거버
 - [ ] 그물런처 시제품
 - [ ] VLM 학습 / 온디바이스 포팅
 - [ ] 비행 시험 (그물 맞고 우는 테스트용 드론 모집중)
 
-> ⚠️ 본 저장소는 **설계 단계**입니다. 방어 코드(`defense/`)와 파라메트릭 SCAD(`cad/`)는 구현·검증되었고, 비행/페이로드 실제 펌웨어·PCB는 추후 진행됩니다.
+> ⚠️ 본 저장소는 **설계 단계**입니다. 방어 코드(`defense/`)와 파라메트릭 SCAD(`cad/`)는 구현·검증되었고, 포렌식(`forensics/`)은 인터페이스/아키텍처 단계(어댑터는 다음 스텝), 비행/페이로드 실제 펌웨어·PCB는 추후 진행됩니다.
