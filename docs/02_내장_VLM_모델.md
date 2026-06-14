@@ -57,7 +57,7 @@
   "threat_level": "HIGH",
   "payload_assessment": "원통형 페이로드 + 배선 식별, 기폭장치 의심",
   "disposition": "CAPTURE_AND_DROP",
-  "drop_reason": "둥지 격리 시 기폭 위험. 무인지대 투하 권장.",
+  "drop_reason": "그물째 회수 시 모선 근접 기폭 위험. 무인지대 투하 권장.",
   "confidence": 0.87,
   "requires_human_approval": false
 }
@@ -103,7 +103,7 @@
    └─ 확신 부족 (confidence < 임계) ──────────▶ HOLD_FOR_HUMAN (사람 불러)
 ```
 
-> 모토: **"의심스러우면 가져오지 말고 버려라. 둥지 안에서 터지는 것보단 들판에서 터지는 게 낫다."**
+> 모토: **"의심스러우면 가져오지 말고 버려라. 모선 밑에 매달려 터지는 것보단 들판에서 터지는 게 낫다."**
 
 ---
 

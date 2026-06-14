@@ -8,7 +8,7 @@
 //   - 1150 mm motor-to-motor diagonal wheelbase
 //   - 6.8 kg empty / 14 kg MTOW
 //   - Jetson Orin companion compute, modular payload bays
-//   - Belly net-launcher bay + foldable nest cage + winch/release
+//   - Belly net-launcher bay + winch/release (captured drone carried in the net)
 //
 // This is a DESIGN / visualization model (massing + mounting geometry), not a
 // stress-certified manufacturing model. Render STL:  openscad -o frame.stl talonet_frame.scad
@@ -49,12 +49,6 @@ bay_w            = 240;    // [120:360]
 bay_l            = 300;    // [150:420]
 bay_h            = 130;    // [60:220]
 
-/* [Nest cage (recovered-drone basket)] */
-show_cage        = true;
-cage_w           = 360;    // [200:520]
-cage_l           = 360;    // [200:520]
-cage_h           = 280;    // [150:420]
-
 /* [Battery] */
 batt_w           = 170;    // [80:260]
 batt_l           = 210;    // [120:320]
@@ -67,7 +61,7 @@ net_depth        = 560;    // [200:1000] funnel/pocket depth (apex->rim)
 net_rings        = 6;      // [3:12] concentric hoops
 net_spokes       = 16;     // [6:28] radial cords
 net_strut_d      = 3.0;    // [1:6] cord thickness (visual)
-net_fwd          = 150;    // [0:600] apex forward offset from belly
+net_drop_off     = 30;     // [0:300] apex drop below belly
 
 /* [Render] */
 $fn              = 64;
@@ -181,29 +175,6 @@ module winch_release() {
         cube([60, 40, 26], center = true);   // release actuator housing
 }
 
-// Foldable nest cage (recovered-drone basket) hanging below
-module nest_cage() {
-    z0 = -bay_h - 60;
-    // vertical rods
-    for (sx = [-1, 1], sy = [-1, 1])
-        color(C_ALU)
-        translate([40 + sx * cage_l/2, sy * cage_w/2, z0 - cage_h/2])
-            cylinder(h = cage_h, d = 8, center = true);
-    // ring frames
-    for (zz = [z0, z0 - cage_h])
-        color(C_KHAKI)
-        translate([40, 0, zz])
-        difference() {
-            cube([cage_l + 12, cage_w + 12, 8], center = true);
-            cube([cage_l - 12, cage_w - 12, 10], center = true);
-        }
-    // mesh hint (sparse)
-    for (i = [-1:0.5:1])
-        color([0.2,0.2,0.18,0.5])
-        translate([40, i * cage_w/2, z0 - cage_h/2])
-            cube([cage_l, 1, cage_h], center = true);
-}
-
 // Landing gear: two arch skids
 module landing_gear() {
     for (sx = [-1, 1])
@@ -232,26 +203,25 @@ module strut(p0, p1, d = net_strut_d) {
     }
 }
 
-// Deployed capture net: forward-opening funnel/canopy with a catching pocket.
-// Apex sits at the launcher; the mouth opens forward (+X) into a wide circle
-// so an incoming target is funnelled into the pocket. Rim weights pull it open.
+// Deployed capture net: DOWNWARD-opening funnel/canopy with a catching pocket.
+// Mothership flies above the target; the net deploys below, apex at the belly
+// launcher, mouth flaring downward (-Z) into a wide circle so the target below
+// is funnelled into the pocket. Rim weights pull the mouth open.
 module capture_net() {
     R   = net_radius;
     D   = net_depth;
     nr  = net_rings;
     ns  = net_spokes;
-    ax  = 40 + net_fwd;        // apex x (just ahead of belly)
-    zc  = -bay_h/2;            // funnel axis height
+    za  = -bay_h - net_drop_off;   // apex z (just below belly)
     // ring i in [0..nr], spoke j -> 3D node.
-    // radius grows with i; mouth (i=nr) flares forward, pocket curves back near apex.
+    // radius grows with i; the mouth (i=nr) flares downward with a bell profile.
     function NP(i, j) =
         let (t  = i / nr,
              r  = R * t,
-             // forward progression with a slight bell flare near the rim
-             x  = ax + D * (0.15 * t + 0.85 * t * t),
+             z  = za - D * (0.15 * t + 0.85 * t * t),   // opens downward
              a  = 360 * j / ns)
-        [ x, r * cos(a), zc + r * sin(a) ];
-    apex = [ax, 0, zc];
+        [ 40 + r * cos(a), r * sin(a), z ];
+    apex = [40, 0, za];
 
     color(C_NET) {
         // radial cords: apex -> rim
@@ -269,7 +239,7 @@ module capture_net() {
         for (j = [0 : ns - 1]) translate(NP(nr, j)) sphere(11, $fn = 18);
     // tether: belly muzzle -> net apex
     color([0.3, 0.3, 0.27])
-        strut([40, 0, -bay_h/2], apex, 2.6);
+        strut([40, 0, -bay_h], apex, 2.6);
 }
 
 // =========================================================================
@@ -292,7 +262,6 @@ module talonet_drone() {
     landing_gear();
     netlauncher_bay();
     winch_release();
-    if (show_cage) nest_cage();
     if (show_net) capture_net();
 }
 
