@@ -63,6 +63,18 @@ net_spokes       = 16;     // [6:28] radial cords
 net_strut_d      = 3.0;    // [1:6] cord thickness (visual)
 net_drop_off     = 30;     // [0:300] apex drop below belly
 
+/* [Cinch: net-mouth drawstring spool] */
+// SEPARATE drive from the hoist winch: this motor reels the mouth drawstring
+// (perimeter purse-loop) to cinch the net opening shut right after capture.
+show_cinch       = true;
+cinch_spool_dia  = 38;     // [16:90] drawstring spool flange diameter
+cinch_spool_w    = 26;     // [10:60] spool drum width (drawstring capacity)
+cinch_motor_dia  = 28;     // [14:50] brushed gearmotor can diameter
+cinch_motor_len  = 56;     // [20:100] brushed gearmotor + gearhead length
+cinch_pos_x      = 120;    // [-200:200] spool assembly X (belly-mounted)
+cinch_drop       = 24;     // [0:120] spool centre below the belly reference plane
+cinch_guide_d    = 9;      // [4:20] drawstring guide-eyelet bore
+
 /* [Render] */
 $fn              = 64;
 
@@ -242,6 +254,72 @@ module capture_net() {
         strut([40, 0, -bay_h], apex, 2.6);
 }
 
+// World-space position of net-mouth rim node j (matches capture_net() rim).
+// Used so the cinch drawstring routing lands exactly on the mouth perimeter.
+function rim_node(j) =
+    let (a = 360 * j / net_spokes,
+         z = (-bay_h - net_drop_off) - net_depth)   // rim z (i = net_rings)
+    [ 40 + net_radius * cos(a), net_radius * sin(a), z ];
+
+// A drawstring guide eyelet (annular ring the purse-line is routed through).
+module guide_eye(p, bore = cinch_guide_d) {
+    color(C_ALU)
+        translate(p) rotate([90, 0, 0])
+            difference() {
+                cylinder(h = 4, d = bore + 6, center = true, $fn = 28);
+                cylinder(h = 6, d = bore,     center = true, $fn = 28);
+            }
+}
+
+// Net-mouth CINCH drawstring spool — a DEDICATED actuator, separate from the
+// hoist winch (winch_release()). Sequence: capture -> THIS motor purses the
+// mouth drawstring shut (tension/current threshold = secured) -> winch hauls
+// the whole pocket up to the belly. Brushed gearmotor drives a flanged drum;
+// two guide eyelets route the purse-line down to the mouth perimeter.
+module cinch_mechanism() {
+    px = cinch_pos_x;
+    pz = -bay_h * 1.5 - cinch_drop; // hangs just below the belly bay bottom
+    drum_d  = cinch_spool_dia * 0.55;
+    hw      = cinch_spool_w / 2;
+    // mounting bracket up into the belly bay underside (straddles + overlaps
+    // both the spool and the bay so it is solidly fused, not merely touching)
+    color(C_KHAKI)
+        translate([px, 0, pz + cinch_spool_dia/2 + cinch_drop/2])
+            cube([48, cinch_spool_w + 44, cinch_spool_dia + cinch_drop], center = true);
+    // brushed gearmotor can (axis along -Y), couples to the spool drum
+    color(C_ALU)
+        translate([px, -(hw + cinch_motor_len/2 + 3), pz])
+            rotate([90, 0, 0]) cylinder(h = cinch_motor_len, d = cinch_motor_dia, center = true);
+    // gearhead collar between motor and spool (overlaps both)
+    color(C_DARK)
+        translate([px, -(hw + 4), pz])
+            rotate([90, 0, 0]) cylinder(h = 16, d = cinch_motor_dia + 6, center = true);
+    // spool drum (drawstring winds on here)
+    color(C_DARK)
+        translate([px, 0, pz])
+            rotate([90, 0, 0]) cylinder(h = cinch_spool_w + 2, d = drum_d, center = true);
+    // spool flanges (keep wraps from spilling)
+    color(C_ALU)
+        for (sy = [-1, 1])
+            translate([px, sy * hw, pz])
+                rotate([90, 0, 0]) cylinder(h = 3, d = cinch_spool_dia, center = true);
+    // load/tension pickup housing straddling the outboard flange (load-cell / encoder)
+    color(C_KHAKI)
+        translate([px, hw + 3, pz])
+            rotate([90, 0, 0]) cylinder(h = 16, d = cinch_motor_dia * 0.7, center = true);
+
+    // drawstring routing: spool -> belly fairlead -> mouth perimeter (rim)
+    guide_top = [px, 0, pz];                             // line leaves spool from the drum
+    guide_bel = [40, 0, -bay_h - 6];                     // belly fairlead near muzzle
+    color([0.3, 0.3, 0.27]) {
+        guide_eye(guide_bel);
+        strut(guide_top, guide_bel, 2.2);
+        // purse hauls fan out to opposing rim nodes (the perimeter draw-loop)
+        for (j = [0, round(net_spokes/4), round(net_spokes/2), round(3*net_spokes/4)])
+            strut(guide_bel, rim_node(j), 2.0);
+    }
+}
+
 // =========================================================================
 // ASSEMBLY
 // =========================================================================
@@ -262,6 +340,7 @@ module talonet_drone() {
     landing_gear();
     netlauncher_bay();
     winch_release();
+    if (show_cinch) cinch_mechanism();
     if (show_net) capture_net();
 }
 
