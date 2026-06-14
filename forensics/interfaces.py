@@ -56,6 +56,9 @@ class AcquiredImage:
     image_hash: HashRecord
     acquired_with: str  # e.g. "dc3dd 7.2.646" / "ewfacquire (libewf 20240506)"
     write_blocker: str  # hardware model or "blockdev --setro"
+    # read-only directory view of the recovered files (mount/extract), if any
+    extracted_root: Optional[str] = None
+    size_bytes: int = 0
 
     def verified(self) -> bool:
         """True iff the image faithfully reproduces the original (hash match)."""
@@ -97,6 +100,22 @@ class AnalysisFindings:
     payload_assessment: list[str] = field(default_factory=list)
     identifiers: dict[str, str] = field(default_factory=dict)  # IFF / attribution
     evidence_basis: list[str] = field(default_factory=list)  # cited log/tool refs
+    file_inventory: list[dict[str, str]] = field(default_factory=list)  # path/size/sha256
+    map_html_path: Optional[str] = None  # rendered folium/Leaflet trajectory map
+
+    def merge(self, other: "AnalysisFindings") -> "AnalysisFindings":
+        """Combine two findings (e.g. content + trajectory) into one."""
+        return AnalysisFindings(
+            launch_estimate=self.launch_estimate or other.launch_estimate,
+            target_estimate=self.target_estimate or other.target_estimate,
+            confidence=max(self.confidence, other.confidence),
+            media_metadata=self.media_metadata + other.media_metadata,
+            payload_assessment=self.payload_assessment + other.payload_assessment,
+            identifiers={**self.identifiers, **other.identifiers},
+            evidence_basis=self.evidence_basis + other.evidence_basis,
+            file_inventory=self.file_inventory + other.file_inventory,
+            map_html_path=self.map_html_path or other.map_html_path,
+        )
 
 
 @dataclass
@@ -137,6 +156,10 @@ class ContentAnalyzer(Protocol):
     """Filesystem / carving / metadata analysis (TSK, binwalk, ExifTool)."""
 
     def analyze(self, image: AcquiredImage) -> AnalysisFindings: ...
+
+    def discover_logs(self, image: AcquiredImage) -> list[str]:
+        """Return candidate flight/GNSS log file paths found on the image."""
+        ...
 
 
 @runtime_checkable

@@ -79,7 +79,9 @@
 | [06. 내부 회로 설계](docs/06_회로_설계.md) | 전력분배·FC·컴패니언·넷런처/윈치/릴리스·인터록 |
 | [07. 소프트웨어 기획](docs/07_소프트웨어_기획.md) | 귀환·모니터링·캡처/투하 버튼, HW 연동 SW 아키텍처 |
 | [08. 사후 포렌식](docs/08_사후_포렌식.md) | 포획한 적 드론 SD/GPS 합법 포렌식 (이미징→해시→파싱→항적/의도→리포트) |
-| [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 (`cad/talonet_frame.scad`) |
+| [09. Forensic Appliance Design](docs/09_Forensic_Appliance_Design.md) | ForensIQ-1 현장 포렌식 기기 하드웨어 설계 (EN) |
+| [10. Forensic Appliance Operator Guide](docs/10_Forensic_Appliance_Operator_Guide.md) | ForensIQ-1 운용 가이드 (EN) |
+| [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 + 포렌식 기기 (`cad/*.scad`) |
 
 ## 🛡️ 방어 코드 (`defense/`)
 
@@ -98,13 +100,15 @@
 
 잡아온 적 드론은 **자기 일기장을 들고 잡혀온** 셈. 해킹/침투가 아니라 **물리적으로 확보된 압류 물품**의 저장장치/로그를 **합법 포렌식**으로 읽는다 (`defense/`가 우리를 지킨다면, `forensics/`는 잡은 걸 분석한다):
 
-- **원본 불가침:** write-blocker 읽기전용 + **SHA-256** 해시 + 원본 봉인 (부팅 금지 → 안티포렌식/자폭 회피)
-- **검증 OSS 파서만:** ArduPilot `.bin`(pymavlink) / PX4 `.ulg`(pyulog) / NMEA(pynmea2) / DJI(dji-log-parser) — 뇌피셜 파싱 금지
-- **항적·의도 분석:** GPS 항적 → 출발지/타깃 추정(gpxpy/folium), 모든 추정에 신뢰도·근거 첨부
-- **무결성/Chain-of-Custody:** append-only **해시체인** 커스터디 로그(`forensics/chain_of_custody.py`, 동작)
-- **리포트:** 위협 인텔 리포트(자산화) + CoC 부록
+- **원본 불가침:** write-blocker 읽기전용 비트복사 + **SHA-256** 검증 + 원본 봉인 (부팅 금지 → 안티포렌식/자폭 회피). 해시 불일치 시 `IntegrityError`로 **중단**
+- **검증 OSS 파서만(구현 완료):** ArduPilot `.bin`/`.tlog`(**pymavlink**) / PX4 `.ulg`(**pyulog**) / NMEA(**pynmea2**) / DJI(dji-log-parser) — 뇌피셜 파싱 금지
+- **항적·의도 분석:** GPS 항적 → 출발지/타깃(체공 감지) 추정 + **folium** 지도, 모든 추정에 신뢰도·근거 첨부(단정 금지)
+- **무결성/Chain-of-Custody:** append-only **해시체인** 커스터디 로그(변조 탐지)
+- **리포트:** **fpdf2 PDF** 위협 인텔 리포트 + 열전사(ESC/POS) 텍스트 + CoC 부록
+- **현장 기기:** `ForensicAppliance.process_card()` 한 방 → 카드 삽입~인쇄~증거USB 아카이브
 
-기획: [`docs/08_사후_포렌식.md`](docs/08_사후_포렌식.md) · 모듈: [`forensics/README.md`](forensics/README.md) (현재 **인터페이스/아키텍처 단계**, 어댑터 구현은 다음 스텝)
+기획/파이프라인: [`docs/08_사후_포렌식.md`](docs/08_사후_포렌식.md) · 모듈: [`forensics/README.md`](forensics/README.md) (**구현·테스트 완료**, 무거운 라이브러리는 지연 import → 의존성 0으로도 import 가능) · 기기: [`docs/09`](docs/09_Forensic_Appliance_Design.md)·[`docs/10`](docs/10_Forensic_Appliance_Operator_Guide.md)
+테스트: `python -m unittest discover -s tests` (68 passing) · 검증 OSS 설치: `pip install -r requirements-forensics.txt`
 
 ---
 

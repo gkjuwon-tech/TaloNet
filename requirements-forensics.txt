@@ -1,0 +1,19 @@
+# Verified open-source parsers/libraries the forensics/ adapters wrap.
+# Install on the ForensIQ appliance image or a dev box to enable the real
+# imaging/parsing/report pipeline. The forensics core (interfaces, pipeline,
+# chain-of-custody, geo, hashing, imaging) runs with zero deps; these light it up.
+
+pymavlink>=2.4.40   # ArduPilot DataFlash .bin / MAVLink .tlog parsing (LGPL-3.0)
+pyulog>=1.0.1       # PX4 ULog .ulg parsing (BSD-3-Clause)
+pynmea2>=1.19.0     # NMEA 0183 GNSS sentence parsing (MIT)
+gpxpy>=1.5.0        # GPX track read/write for trajectory export (Apache-2.0)
+folium>=0.16.0      # Leaflet/OpenStreetMap HTML trajectory map (MIT)
+fpdf2>=2.7.0        # Threat-intel PDF report generation (LGPL-3.0)
+
+# Optional extras (not required for the test suite):
+#   python-escpos    # 80mm ESC/POS thermal printer driver (GPL-3.0)
+#   exifread         # pure-python EXIF metadata (fallback to system exiftool)
+#
+# System tools (not pip-installable) used when present, documented in docs/08:
+#   dc3dd / dcfldd, libewf (ewfacquire), The Sleuth Kit (TSK), binwalk,
+#   ExifTool, hashdeep, and the dji-log-parser CLI for DJI flight records.
