@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Python (future code phase)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Build / CAD output (future SCAD phase)
+*.stl
+*.gcode
+build/
+dist/
+
+# Logs
+*.log
