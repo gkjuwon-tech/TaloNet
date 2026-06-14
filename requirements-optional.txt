@@ -1,0 +1,7 @@
+# Optional dependencies for LIVE signal-in-space OSNMA verification.
+# The core defense/ stack runs with the Python standard library only; these are
+# only needed if you want to authenticate real Galileo OSNMA data.
+#
+# OSNMAlib — verified open-source Galileo OSNMA implementation (EUPL-1.2).
+# https://github.com/Algafix/OSNMA
+osnma>=3.2 ; python_version >= "3.10"

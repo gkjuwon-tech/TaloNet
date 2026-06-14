@@ -75,6 +75,20 @@
 | [02. 내장 VLM 모델](docs/02_내장_VLM_모델.md) | HawkEye-VLM 비전-언어 모델 |
 | [03. 내장 센서](docs/03_내장_센서.md) | 센서 스위트 + 융합 파이프라인 |
 | [04. 추가 부품](docs/04_추가_부품.md) | 그물런처, 둥지, 투하 메커니즘 등 |
+| [05. 방어 시스템](docs/05_방어_시스템.md) | 항법/링크 보안 (스푸핑·재밍·명령위조 방어) |
+
+## 🛡️ 방어 코드 (`defense/`)
+
+우리는 **공격은 안 한다.** 적 드론을 해킹/스푸핑/재밍하지 않는다. 대신 **그물매 모선드론 자신**이 당하지 않도록 방어한다. `defense/` 패키지는 전부 **검증된 공개 알고리즘/오픈소스 기반**(내 뇌피셜 아님):
+
+- **GNSS 인증 (anti-spoof):** Galileo OSNMA / TESLA — `defense/gnss/osnma_adapter.py`
+- **RAIM (무결성 감시 + 고장위성 배제):** `defense/gnss/raim.py`
+- **스푸핑/재밍 일관성 검사** (ArduPilot glitch/EKF gating, C/N0, 클럭점프, 다중위성군): `defense/gnss/spoof_detection.py`
+- **MAVLink2 명령 서명** (위조/리플레이 방어): `defense/link/mavlink_signing.py`
+- **RF 링크 보안** (HMAC + 안티리플레이 + 재밍/탈취 감시): `defense/link/rf_link_security.py`
+- **통합 판정** (TRUST/DEGRADED/DEADRECKON/RTH): `defense/monitor.py`
+
+출처·라이선스: [`defense/README.md`](defense/README.md) · 테스트: `python -m unittest discover -s tests` (47 passing)
 
 ---
 
@@ -87,7 +101,8 @@
 
 ## 🚧 현재 상태
 
-- [x] 기획 / 문서 (← 지금 여기)
+- [x] 기획 / 문서
+- [x] 방어 코드 (`defense/` 항법·링크 보안, 검증된 OSS 기반) (← 지금 여기)
 - [ ] OpenSCAD 기체 모델링
 - [ ] 그물런처 시제품
 - [ ] VLM 학습 / 온디바이스 포팅
