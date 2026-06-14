@@ -62,12 +62,12 @@ batt_h           = 75;     // [30:140]
 
 /* [Capture net] */
 show_net         = true;
-net_span         = 620;    // [300:1000] deployed net width/depth
-net_drop         = 170;    // [40:400] catenary sag at centre
-net_cells        = 8;      // [4:14] mesh grid lines per side
-net_strut_d      = 3.2;    // [1:6] cord thickness (visual)
-net_fwd          = 540;    // [0:900] forward deploy distance from belly
-net_z            = -110;   // [-400:0] net top height (rel. lower deck)
+net_radius       = 430;    // [200:800] deployed mouth radius (opening)
+net_depth        = 560;    // [200:1000] funnel/pocket depth (apex->rim)
+net_rings        = 6;      // [3:12] concentric hoops
+net_spokes       = 16;     // [6:28] radial cords
+net_strut_d      = 3.0;    // [1:6] cord thickness (visual)
+net_fwd          = 150;    // [0:600] apex forward offset from belly
 
 /* [Render] */
 $fn              = 64;
@@ -224,13 +224,6 @@ module battery() {
             cube([batt_l, batt_w, batt_h], center = true);
 }
 
-// ----- net geometry helpers ---------------------------------------------
-function net_x(i, n, span) = -span/2 + span * (i / n);
-// downward sag (catenary-ish): 0 at edges, -drop at centre
-function net_sag(i, j, n, drop) =
-    let (u = i/n - 0.5, v = j/n - 0.5)
-        -drop * (1 - 4*u*u) * (1 - 4*v*v);
-
 // strut between two 3D points
 module strut(p0, p1, d = net_strut_d) {
     hull() {
@@ -239,30 +232,44 @@ module strut(p0, p1, d = net_strut_d) {
     }
 }
 
-// Deployed capture net: sagging square mesh + corner weights + tethers
+// Deployed capture net: forward-opening funnel/canopy with a catching pocket.
+// Apex sits at the launcher; the mouth opens forward (+X) into a wide circle
+// so an incoming target is funnelled into the pocket. Rim weights pull it open.
 module capture_net() {
-    n  = net_cells;
-    sp = net_span;
-    cx = 40 + net_fwd;     // forward of belly
-    // mesh node position
-    function P(i, j) = [ cx + net_x(i, n, sp),
-                         net_x(j, n, sp),
-                         net_z + net_sag(i, j, n, net_drop) ];
+    R   = net_radius;
+    D   = net_depth;
+    nr  = net_rings;
+    ns  = net_spokes;
+    ax  = 40 + net_fwd;        // apex x (just ahead of belly)
+    zc  = -bay_h/2;            // funnel axis height
+    // ring i in [0..nr], spoke j -> 3D node.
+    // radius grows with i; mouth (i=nr) flares forward, pocket curves back near apex.
+    function NP(i, j) =
+        let (t  = i / nr,
+             r  = R * t,
+             // forward progression with a slight bell flare near the rim
+             x  = ax + D * (0.15 * t + 0.85 * t * t),
+             a  = 360 * j / ns)
+        [ x, r * cos(a), zc + r * sin(a) ];
+    apex = [ax, 0, zc];
+
     color(C_NET) {
-        // cords along X and Y
-        for (i = [0 : n], j = [0 : n]) {
-            if (i < n) strut(P(i, j), P(i + 1, j));
-            if (j < n) strut(P(i, j), P(i, j + 1));
+        // radial cords: apex -> rim
+        for (j = [0 : ns - 1]) {
+            strut(apex, NP(1, j));
+            for (i = [1 : nr - 1]) strut(NP(i, j), NP(i + 1, j));
         }
+        // concentric hoops
+        for (i = [1 : nr])
+            for (j = [0 : ns - 1])
+                strut(NP(i, j), NP(i, (j + 1) % ns));
     }
-    // corner weights (steel bolos)
+    // perimeter weights (open the mouth on deployment)
     color(C_DARK)
-        for (ci = [0, n], cj = [0, n])
-            translate(P(ci, cj)) sphere(11, $fn = 20);
-    // tethers from belly launcher to the two near corners
+        for (j = [0 : ns - 1]) translate(NP(nr, j)) sphere(11, $fn = 18);
+    // tether: belly muzzle -> net apex
     color([0.3, 0.3, 0.27])
-        for (cj = [0, n])
-            strut([40, net_x(cj, n, sp) * 0.4, -bay_h/2], P(0, cj), 2.4);
+        strut([40, 0, -bay_h/2], apex, 2.6);
 }
 
 // =========================================================================
