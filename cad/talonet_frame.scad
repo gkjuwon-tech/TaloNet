@@ -75,6 +75,15 @@ cinch_pos_x      = 120;    // [-200:200] spool assembly X (belly-mounted)
 cinch_drop       = 24;     // [0:120] spool centre below the belly reference plane
 cinch_guide_d    = 9;      // [4:20] drawstring guide-eyelet bore
 
+/* [Net aiming gimbal] */
+// SOFTWARE-AIMED launcher: pan/tilt servos point the muzzle so the net is THROWN
+// where commanded (no longer dropped by gravity/luck). Driven by the GCS.
+show_aim         = true;
+net_pan          = 0;      // [-60:60] azimuth aim, deg (software-set)
+net_tilt         = 16;     // [0:75] tilt from straight-down toward the nose, deg
+aim_servo        = 24;     // [14:40] aim-servo block size
+gimbal_ring_d    = 92;     // [50:170] pan bearing / tilt-yoke ring diameter
+
 /* [Render] */
 $fn              = 64;
 
@@ -320,6 +329,44 @@ module cinch_mechanism() {
     }
 }
 
+// SOFTWARE-AIMED net launcher: a pan/tilt gimbal points the muzzle so the net
+// is thrown where the GCS commands, instead of being dropped by gravity. The
+// whole net pod (muzzle nozzle + capture net + cinch spool) rides the aim, so
+// changing net_pan/net_tilt swings the deployed net. Two servos (pan + tilt)
+// are the visible actuators; the gimbal base bolts to the belly bay.
+module net_launcher() {
+    pv  = [40, 0, -bay_h];               // gimbal pivot = belly muzzle reference
+    rd  = gimbal_ring_d;
+    // FIXED base: pan bearing housing + PAN servo (mounted to the bay underside)
+    color(C_DARK)
+        translate([40, 0, -bay_h + 1]) cylinder(h = 14, d = rd, center = true);
+    color(C_KHAKI)
+        translate([40, rd/2 + aim_servo*0.55, -bay_h + 1])
+            cube([aim_servo*1.4, aim_servo, aim_servo], center = true);   // PAN servo
+    // AIMED group: pan about Z, then tilt about Y, about the pivot
+    translate(pv) rotate([0, 0, net_pan]) rotate([0, net_tilt, 0]) translate([-40, 0, bay_h]) {
+        // pan turntable disc the yoke hangs from
+        color(C_ALU)
+            translate([40, 0, -bay_h - 6]) cylinder(h = 8, d = rd*0.8, center = true);
+        // tilt yoke (two arms) framing the muzzle
+        for (sy = [-1, 1])
+            color(C_ALU)
+                translate([40, sy*rd*0.34, -bay_h - net_drop_off*0.5 - 6])
+                    cube([12, 9, net_drop_off + 14], center = true);
+        // TILT servo on the +Y yoke arm
+        color(C_KHAKI)
+            translate([40, rd*0.34 + aim_servo*0.55, -bay_h - net_drop_off*0.5 - 6])
+                cube([aim_servo, aim_servo*0.8, aim_servo], center = true);
+        // muzzle nozzle (net deploys from here, in the aimed direction)
+        color(C_DARK)
+            translate([40, 0, -bay_h - net_drop_off]) rotate([90, 0, 0])
+                cylinder(h = 10, d = rd*0.55, center = true);
+        // the deployed net + the cinch spool ride the aim
+        if (show_cinch) cinch_mechanism();
+        if (show_net)   capture_net();
+    }
+}
+
 // =========================================================================
 // ASSEMBLY
 // =========================================================================
@@ -340,8 +387,11 @@ module talonet_drone() {
     landing_gear();
     netlauncher_bay();
     winch_release();
-    if (show_cinch) cinch_mechanism();
-    if (show_net) capture_net();
+    if (show_aim) net_launcher();
+    else {
+        if (show_cinch) cinch_mechanism();
+        if (show_net) capture_net();
+    }
 }
 
 talonet_drone();
