@@ -16,12 +16,13 @@ needed for the windowed cockpit and is imported lazily.
 
 from .camera import SyntheticCamera
 from .control import PAN_LIMITS, TILT_LIMITS, ControlState
-from .link import Ack, LoopbackLink
+from .link import Ack, LoopbackLink, MavlinkLink
 
 __all__ = [
     "Ack",
     "ControlState",
     "LoopbackLink",
+    "MavlinkLink",
     "PAN_LIMITS",
     "SyntheticCamera",
     "TILT_LIMITS",

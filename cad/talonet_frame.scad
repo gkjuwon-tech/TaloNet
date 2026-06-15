@@ -62,6 +62,12 @@ net_rings        = 6;      // [3:12] concentric hoops
 net_spokes       = 16;     // [6:28] radial cords
 net_strut_d      = 3.0;    // [1:6] cord thickness (visual)
 net_drop_off     = 30;     // [0:300] apex drop below belly
+// LAUNCHED net: fired as a spreading projectile (not a fixed scoop). The pod is
+// ejected 'net_launch_dist' along the aim, the mouth flares wider, and thin
+// trailing launch lines run back to the muzzle.
+net_launched     = true;
+net_launch_dist  = 170;    // [0:500] how far the net has been fired from the muzzle
+net_spread       = 1.18;   // [1:1.6] extra mouth flare when launched (casting spread)
 
 /* [Cinch: net-mouth drawstring spool] */
 // SEPARATE drive from the hoist winch: this motor reels the mouth drawstring
@@ -78,9 +84,12 @@ cinch_guide_d    = 9;      // [4:20] drawstring guide-eyelet bore
 /* [Net aiming gimbal] */
 // SOFTWARE-AIMED launcher: pan/tilt servos point the muzzle so the net is THROWN
 // where commanded (no longer dropped by gravity/luck). Driven by the GCS.
+// SINGLE SOURCE OF TRUTH for the travel limits is gcs/payload_map.py — these
+// ranges MUST match (AIM-PAN SERVO9 -60..+60 deg, AIM-TILT SERVO10 0..75 deg)
+// so the firmware DO_SET_SERVO, the cockpit reticle, and this geometry agree.
 show_aim         = true;
-net_pan          = 0;      // [-60:60] azimuth aim, deg (software-set)
-net_tilt         = 16;     // [0:75] tilt from straight-down toward the nose, deg
+net_pan          = 0;      // [-60:60] AIM-PAN  (SERVO9)  azimuth, deg
+net_tilt         = 16;     // [0:75]   AIM-TILT (SERVO10) tilt from straight-down, deg
 aim_servo        = 24;     // [14:40] aim-servo block size
 gimbal_ring_d    = 92;     // [50:170] pan bearing / tilt-yoke ring diameter
 
@@ -93,6 +102,8 @@ plate_r        = plate_across / 2;              // across-flats radius
 arm_len        = motor_radius - plate_r * 0.6;  // exposed tube length
 deck_z_bot     = 0;
 deck_z_top     = deck_gap;
+net_gap        = net_launched ? net_launch_dist : 0;   // muzzle->net eject offset
+net_flare      = net_launched ? net_spread : 1;        // launched mouth spread
 
 // ----- color helpers -----------------------------------------------------
 C_CARBON  = [0.13, 0.13, 0.14];
@@ -224,51 +235,57 @@ module strut(p0, p1, d = net_strut_d) {
     }
 }
 
-// Deployed capture net: DOWNWARD-opening funnel/canopy with a catching pocket.
-// Mothership flies above the target; the net deploys below, apex at the belly
-// launcher, mouth flaring downward (-Z) into a wide circle so the target below
-// is funnelled into the pocket. Rim weights pull the mouth open.
+// LAUNCHED capture net: fired from the belly muzzle as a spreading casting net
+// (not a fixed scoop). The pod is ejected 'net_gap' along the deploy axis; the
+// weighted rim leads and flares wide (net_flare), the cords trail back to a
+// converging throat, and thin LAUNCH LINES run all the way back to the muzzle
+// so it reads as "just fired and opening", not "hanging".
 module capture_net() {
-    R   = net_radius;
+    R   = net_radius * net_flare;     // launched mouth spread
     D   = net_depth;
     nr  = net_rings;
     ns  = net_spokes;
-    za  = -bay_h - net_drop_off;   // apex z (just below belly)
-    // ring i in [0..nr], spoke j -> 3D node.
-    // radius grows with i; the mouth (i=nr) flares downward with a bell profile.
+    za  = -bay_h - net_drop_off - net_gap;   // throat z (ejected away from muzzle)
+    muzzle = [40, 0, -bay_h];
+    // ring i in [0..nr]: i=0 throat (near, narrow) -> i=nr leading rim (far, wide).
     function NP(i, j) =
         let (t  = i / nr,
              r  = R * t,
-             z  = za - D * (0.15 * t + 0.85 * t * t),   // opens downward
+             z  = za - D * (0.15 * t + 0.85 * t * t),   // opens away from the gun
              a  = 360 * j / ns)
         [ 40 + r * cos(a), r * sin(a), z ];
-    apex = [40, 0, za];
+    throat = [40, 0, za];
 
     color(C_NET) {
-        // radial cords: apex -> rim
+        // radial cords: throat -> leading rim
         for (j = [0 : ns - 1]) {
-            strut(apex, NP(1, j));
+            strut(throat, NP(1, j));
             for (i = [1 : nr - 1]) strut(NP(i, j), NP(i + 1, j));
         }
-        // concentric hoops
+        // concentric hoops (the mesh)
         for (i = [1 : nr])
             for (j = [0 : ns - 1])
                 strut(NP(i, j), NP(i, (j + 1) % ns));
     }
-    // perimeter weights (open the mouth on deployment)
+    // leading-edge weights flung wide (net-gun spread keeps the mouth open)
     color(C_DARK)
-        for (j = [0 : ns - 1]) translate(NP(nr, j)) sphere(11, $fn = 18);
-    // tether: belly muzzle -> net apex
-    color([0.3, 0.3, 0.27])
-        strut([40, 0, -bay_h], apex, 2.6);
+        for (j = [0 : ns - 1]) translate(NP(nr, j)) sphere(12, $fn = 18);
+    // trailing LAUNCH LINES back to the muzzle: main throat line + a few to the
+    // leading rim, showing the net was fired and is paying out behind it.
+    color([0.3, 0.3, 0.27]) {
+        strut(muzzle, throat, 2.6);
+        for (j = [0, round(ns/4), round(ns/2), round(3*ns/4)])
+            strut(muzzle, NP(nr, j), 1.6);
+    }
 }
 
 // World-space position of net-mouth rim node j (matches capture_net() rim).
 // Used so the cinch drawstring routing lands exactly on the mouth perimeter.
 function rim_node(j) =
     let (a = 360 * j / net_spokes,
-         z = (-bay_h - net_drop_off) - net_depth)   // rim z (i = net_rings)
-    [ 40 + net_radius * cos(a), net_radius * sin(a), z ];
+         R = net_radius * net_flare,
+         z = (-bay_h - net_drop_off - net_gap) - net_depth)   // launched rim z
+    [ 40 + R * cos(a), R * sin(a), z ];
 
 // A drawstring guide eyelet (annular ring the purse-line is routed through).
 module guide_eye(p, bore = cinch_guide_d) {
