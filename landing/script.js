@@ -56,7 +56,9 @@
         form.reportValidity();
         return;
       }
-      form.style.display = "none";
+      form.querySelectorAll(".field, button, .form__note").forEach(function (el) {
+        el.style.display = "none";
+      });
       ok.classList.add("is-on");
     });
   }
