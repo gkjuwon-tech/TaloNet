@@ -27,3 +27,14 @@ background loops, so any music licensed in the original productions is not used.
 | `recovered-drones.jpg` | Wikimedia Commons — "Shahed drones recovered from Iraq and Ukraine", U.S. Defense Intelligence Agency | Public domain (U.S. federal government work) |
 
 Photographs are downscaled and stripped of metadata for web delivery.
+
+## Typography
+
+| Family | Use | Source / License |
+|--------|-----|------------------|
+| **B612** | Body and headings | Designed by Airbus + Intactile DESIGN / ENAC for cockpit display legibility. SIL Open Font License 1.1 |
+| **B612 Mono** | Labels, telemetry, specs, UI | Monospace companion to B612. SIL Open Font License 1.1 |
+
+Fonts are self-hosted (`assets/fonts/*.woff2`) — no third-party font CDN is called,
+so the page makes no external requests at runtime. B612 is a genuine aviation
+typeface drawn for instrument readability, not a decorative "military" display font.
