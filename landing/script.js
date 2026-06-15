@@ -27,7 +27,7 @@
     });
   }
 
-  // Reveal on scroll.
+  // Reveal section content on scroll.
   var reveals = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window) {
     var io = new IntersectionObserver(
@@ -39,12 +39,20 @@
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0.1, rootMargin: "0px 0px -8% 0px" }
     );
     reveals.forEach(function (el) { io.observe(el); });
   } else {
     reveals.forEach(function (el) { el.classList.add("is-in"); });
   }
+
+  // Background clips can be paused by the browser's autoplay policy on some
+  // engines; nudge them to play once they are decodable.
+  document.querySelectorAll("video.band__media").forEach(function (v) {
+    var tryPlay = function () { var p = v.play(); if (p && p.catch) p.catch(function () {}); };
+    if (v.readyState >= 2) tryPlay();
+    v.addEventListener("loadeddata", tryPlay, { once: true });
+  });
 
   // Contact form — client-side acknowledgement (no backend).
   var form = document.getElementById("briefForm");
@@ -56,7 +64,7 @@
         form.reportValidity();
         return;
       }
-      form.querySelectorAll(".field, button, .form__note").forEach(function (el) {
+      form.querySelectorAll(".field, .form__grid, button, .form__note").forEach(function (el) {
         el.style.display = "none";
       });
       ok.classList.add("is-on");
