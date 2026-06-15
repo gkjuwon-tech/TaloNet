@@ -47,11 +47,27 @@
   }
 
   // Background clips can be paused by the browser's autoplay policy on some
-  // engines; nudge them to play once they are decodable.
-  document.querySelectorAll("video.band__media").forEach(function (v) {
-    var tryPlay = function () { var p = v.play(); if (p && p.catch) p.catch(function () {}); };
-    if (v.readyState >= 2) tryPlay();
-    v.addEventListener("loadeddata", tryPlay, { once: true });
+  // engines; keep them muted+inline and nudge them to play whenever possible.
+  var bgVideos = document.querySelectorAll("video.band__media");
+  var play = function (v) {
+    v.muted = true;                       // muted is required for autoplay
+    try { v.setAttribute("muted", ""); } catch (e) {}
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  };
+  var playAll = function () { bgVideos.forEach(play); };
+  bgVideos.forEach(function (v) {
+    if (v.readyState >= 2) play(v);
+    v.addEventListener("loadeddata", function () { play(v); }, { once: true });
+    v.addEventListener("canplay", function () { play(v); }, { once: true });
+  });
+  // Some engines (e.g. iOS Low Power Mode) defer autoplay until a gesture or
+  // until the tab is visible again; retry on the first interaction / focus.
+  ["touchstart", "pointerdown", "click", "keydown"].forEach(function (ev) {
+    window.addEventListener(ev, playAll, { once: true, passive: true });
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) playAll();
   });
 
   // Contact form — client-side acknowledgement (no backend).

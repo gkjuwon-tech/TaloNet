@@ -157,6 +157,13 @@ h1.display { font-size: clamp(2.3rem, 5vw, 4.6rem); max-width: 18ch; }
   filter: var(--grade);
 }
 .band--photo .band__media { filter: var(--grade) contrast(1.04); }
+/* keep background loops chromeless — hide iOS' "tap to play" overlay button */
+video.band__media::-webkit-media-controls,
+video.band__media::-webkit-media-controls-start-playback-button,
+video.band__media::-webkit-media-controls-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
 .band__scrim {
   position: absolute; inset: 0; z-index: 1;
   background:
