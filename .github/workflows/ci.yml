@@ -16,6 +16,8 @@ jobs:
       - name: Install ruff
         run: pip install ruff
       - name: Lint (ruff)
-        run: ruff check defense tests
-      - name: Run tests (stdlib unittest, no deps)
+        run: ruff check defense forensics gcs tests
+      - name: Install forensics deps (verified OSS parsers)
+        run: pip install -r requirements-forensics.txt
+      - name: Run tests (defense stdlib + forensics adapters)
         run: python -m unittest discover -s tests -v

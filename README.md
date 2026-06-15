@@ -46,9 +46,9 @@
                   ☁️  TaloNet "그물매(Geulmae)" 모선드론
                  /  \
                 /    \   ← 4축 헥사/옥타콥터, 그물런처 탑재
-        [그물런처 x2]  [하방 포획 그물]
+   [소프트웨어 조준 그물런처]  [하방 포획 그물]
                 |
-   📡 내장 VLM (적/아군/자폭 판별) + 멀티센서 융합
+   🎮 사람이 FPV 보며 키보드로 조종 (gcs/) — VLM 자율판단 제거(속도/책임)
                 |
         ┌───────┴────────┐
         ▼                ▼
@@ -59,10 +59,10 @@
 | 구성요소 | 코드네임 | 설명 |
 |----------|----------|------|
 | 모선 드론 | **그물매 (Geulmae)** | 적 드론보다 ㅈㄴ 큰 헌터-킬러 플랫폼 |
-| 포획 그물 | **TaloNet** | 발사형 자기수축 케블라 그물 |
+| 포획 그물 | **TaloNet** | **소프트웨어 조준**(팬/틸트) 발사형 자기수축 케블라 그물 |
 | 포획 운반 | **그물 캐리(Net Carry)** | 잡은 드론을 그물째 담아 매달고 운반 (별도 케이지 X) |
-| 두뇌 | **HawkEye-VLM** | 적/아군/위험물 실시간 판별 비전 모델 |
-| 위협 분류 | **"ㅈ됨 판정기"** | 가져와도 되는지/버려야 하는지 판단 |
+| 조종 | **수동 텔레옵 콕핏 (`gcs/`)** | FPV + HUD, 키보드로 비행·그물 조준/발사 (VLM 제거, 사람이 결정) |
+| 사후분석 | **카운터-UAS 익스플로잇 (`forensics/`)** | 잡은 적 SD카드 → 적 발사지점 등 표적정보 |
 
 ---
 
@@ -72,13 +72,16 @@
 |------|------|
 | [00. 기획문서](docs/00_기획문서.md) | 비전, CONOPS, 방산사업 모델, 윤리, 로드맵 |
 | [01. 드론 하드웨어 스펙](docs/01_드론_스펙.md) | 모선 드론 "그물매" 풀 스펙 |
-| [02. 내장 VLM 모델](docs/02_내장_VLM_모델.md) | HawkEye-VLM 비전-언어 모델 |
+| [02. 내장 VLM 모델](docs/02_내장_VLM_모델.md) | ⚠️ ~~HawkEye-VLM~~ **제거됨**(수동 텔레옵으로 대체, 참고용 보존) |
 | [03. 내장 센서](docs/03_내장_센서.md) | 센서 스위트 + 융합 파이프라인 |
 | [04. 추가 부품](docs/04_추가_부품.md) | 그물런처, 그물운반, 투하 메커니즘 등 |
 | [05. 방어 시스템](docs/05_방어_시스템.md) | 항법/링크 보안 (스푸핑·재밍·명령위조 방어) |
 | [06. 내부 회로 설계](docs/06_회로_설계.md) | 전력분배·FC·컴패니언·넷런처/윈치/릴리스·인터록 |
-| [07. 소프트웨어 기획](docs/07_소프트웨어_기획.md) | 귀환·모니터링·캡처/투하 버튼, HW 연동 SW 아키텍처 |
-| [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 (`cad/talonet_frame.scad`) |
+| [07. 소프트웨어 기획](docs/07_소프트웨어_기획.md) | 수동 텔레옵 아키텍처(VLM 제거), 그물 조준/발사·HW 연동 |
+| [08. 사후 포렌식](docs/08_사후_포렌식.md) | 적 드론 SD/GPS 익스플로잇 → **적 발사지점 좌표**(정당방위 표적정보) |
+| [09. Forensic Appliance Design](docs/09_Forensic_Appliance_Design.md) | ForensIQ-1 카운터-UAS 익스플로잇 기기 하드웨어 설계 (EN) |
+| [10. Forensic Appliance Operator Guide](docs/10_Forensic_Appliance_Operator_Guide.md) | ForensIQ-1 운용 가이드 (EN) |
+| [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 + 포렌식 기기 (`cad/*.scad`) |
 
 ## 🛡️ 방어 코드 (`defense/`)
 
@@ -93,6 +96,35 @@
 
 출처·라이선스: [`defense/README.md`](defense/README.md) · 테스트: `python -m unittest discover -s tests` (47 passing)
 
+## 🎮 수동 조종 콕핏 (`gcs/`)
+
+**VLM 자율판단 들어내고, 사람이 직접 몬다.** 속도가 생명이고(적 FPV는 초고속) 교전 결정은 어차피 사람 몫이라, 온디바이스 추론 루프를 제거하고 **수동 텔레옵 앱**으로 갔다. 노트북에 깔고 키보드로 비행 + **소프트웨어 조준 그물** 발사.
+
+![cockpit](docs/img/cockpit.png)
+
+- **화면:** FPV 카메라(EO/IR) + HUD(자세·스로틀·아밍·방어상태) + **그물 조준 레티클**(팬/틸트)
+- **키보드:** `WASD`+`QE` 비행, `RF` 스로틀, `IJKL` 그물 조준, `SPACE` 발사, `C` 조임, `V` 투하, `G` 아밍, `B` E-Stop, `H` 귀환
+- **인터록:** 발사/조임/투하는 **아밍 상태**에서만, E-Stop 래치 시 무장 불가 (하드웨어 doc 06 §11과 동일)
+- **링크:** 명령은 시퀀스+**HMAC 서명**+안티리플레이(`gcs/link.py`) — 실링크는 MAVLink2 서명(`defense/link/`)
+- **코어는 무의존**(`control`/`link` stdlib, 테스트됨), 콕핏만 `pygame`+`numpy`
+
+실행: `pip install -r requirements-gcs.txt && python -m gcs` · 모듈: [`gcs/README.md`](gcs/README.md)
+
+## 🔬 카운터-UAS 익스플로잇 (`forensics/`)
+
+적이 **선빵**(악의적 자폭/정찰 드론)을 날렸고, 우리는 그물로 **수비(비살상 포획)만** 했다. 잡은 적 자산을 까서 **"이 새끼 어디서 쐈냐" = 적 발사지점 좌표(±오차반경)**를 뽑아 **정당방위 반격의 표적정보**를 만든다. 경찰 신고/법정 제출 ❌, **지휘관 표적 결심용 인텔** ⭕ (`defense/`가 우리를 지키면, `forensics/`는 잡은 걸 까서 출처를 짚는다):
+
+- **원본 불가침:** write-blocker 읽기전용 비트복사 + **SHA-256** 검증 (부팅 금지 → 안티포렌식/자폭 회피). 해시 불일치 시 `IntegrityError`로 **중단**
+- **검증 OSS 파서만(구현 완료):** ArduPilot `.bin`/`.tlog`(**pymavlink**) / PX4 `.ulg`(**pyulog**) / NMEA(**pynmea2**) / DJI(dji-log-parser) — 뇌피셜 파싱 금지
+- **★ 발사지점 + 금광 전체 추출:** GPS 항적 → **적 발사좌표 ± 오차반경(CEP)** + **작전반경 레인지링(=적 기지)** + 다중출격 반복출발지 + **계획 항로(웨이포인트=다음 표적)** + **펌웨어/보드 귀속** + **지오펜스/무전 SYSID 파라미터** + **정찰 영상 지오태그** + 타임라인. 좌표 하나로 안 끝냄 (`folium` 지도)
+- **정보 무결성(provenance):** append-only **해시체인** 출처기록 → 지휘관이 믿고 쓸 수 있게
+- **리포트:** **fpdf2 PDF** 카운터-UAS 표적 인텔 패킷 + 열전사(ESC/POS) 텍스트 + provenance 부록
+- **⚠️ 정보 ≠ 발사명령:** 교전은 **인간 지휘관이 ROE/국제인도법(구별·비례·예방)** 하에 결정. 자동 타격 없음, 민간 대상 금지. 발사지점은 **독립 수단으로 교차검증**
+- **현장 기기:** `ForensicAppliance.process_card()` 한 방 → 카드 삽입~인쇄~증거USB 아카이브
+
+기획/파이프라인: [`docs/08_사후_포렌식.md`](docs/08_사후_포렌식.md) · 모듈: [`forensics/README.md`](forensics/README.md) (**구현·테스트 완료**, 무거운 라이브러리는 지연 import → 의존성 0으로도 import 가능) · 기기: [`docs/09`](docs/09_Forensic_Appliance_Design.md)·[`docs/10`](docs/10_Forensic_Appliance_Operator_Guide.md)
+테스트: `python -m unittest discover -s tests` (68 passing) · 검증 OSS 설치: `pip install -r requirements-forensics.txt`
+
 ---
 
 ## ⚖️ 윤리 한 줄 (가장 중요)
@@ -106,12 +138,14 @@
 
 - [x] 기획 / 문서
 - [x] 방어 코드 (`defense/` 항법·링크 보안, 검증된 OSS 기반)
-- [x] OpenSCAD 파라메트릭 기체 모델 (`cad/talonet_frame.scad`)
-- [x] 내부 회로 설계 (docs/06)
-- [x] 소프트웨어 기획 — HW 연동 SW (docs/07) (← 지금 여기)
+- [x] OpenSCAD 파라메트릭 기체 모델 (`cad/talonet_frame.scad`) — 입구 조임(cinch) + **소프트웨어 조준 그물런처(팬/틸트)**
+- [x] 내부 회로 설계 (docs/06) — 시닝/윈치 2단 결속 + **조준 서보(AIM-PAN/TILT)**
+- [x] 소프트웨어 기획 — 수동 텔레옵 아키텍처 (docs/07, VLM 제거)
+- [x] **수동 조종 콕핏 (`gcs/`)** — FPV+HUD+키보드, 그물 조준/발사 (구현·테스트)
+- [x] 사후 포렌식/익스플로잇 (docs/08, `forensics/`) + ForensIQ-1 기기 (docs/09·10)
+- [x] ~~VLM 학습/포팅~~ → **제거**(수동 텔레옵으로 대체)
 - [ ] 회로도(KiCad) / 하네스 / PCB 거버
-- [ ] 그물런처 시제품
-- [ ] VLM 학습 / 온디바이스 포팅
+- [ ] 그물런처 + 조준 짐벌 시제품
 - [ ] 비행 시험 (그물 맞고 우는 테스트용 드론 모집중)
 
-> ⚠️ 본 저장소는 **설계 단계**입니다. 방어 코드(`defense/`)와 파라메트릭 SCAD(`cad/`)는 구현·검증되었고, 비행/페이로드 실제 펌웨어·PCB는 추후 진행됩니다.
+> ⚠️ 본 저장소는 **설계 단계**입니다. 방어(`defense/`)·SCAD(`cad/`)·포렌식(`forensics/`)·콕핏(`gcs/`)은 구현·검증되었고, 비행/페이로드 실제 펌웨어·PCB는 추후 진행됩니다.
