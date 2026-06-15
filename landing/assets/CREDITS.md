@@ -1,15 +1,25 @@
 # Landing page asset credits
 
-All background media is free stock, cleared for commercial use. No AI-generated
-imagery is used.
+All photographic media is free stock cleared for commercial use. No AI-generated
+imagery is used. The vector/design assets below were drawn in-house for this page.
+
+## Photography
 
 | File | Source | License |
 |------|--------|---------|
-| `hero-sky.mp4` / `hero-sky.jpg` | Mixkit — "Clouds and blue sky background" (#2408) | Mixkit Stock Video Free License (commercial use, no attribution required) |
-| `terrain.mp4` / `terrain.jpg` | Mixkit — "Flying over a plain with crop fields" (#44277) | Mixkit Stock Video Free License (commercial use, no attribution required) |
-| `net.jpg` | Pexels — "Close up of Fishing Net" (#19564529) by Ellie Burgin | Pexels License (free for commercial use) |
-| `field.jpg` | Pexels — "Aerial View of Fields in Countryside" (#7350421) by Altaf Shah | Pexels License (free for commercial use) |
-| `grid.jpg` | Pexels — "Blurred Lights behind a Metal Grid" (#16294829) by Damir | Pexels License (free for commercial use) |
+| `threat-drone.jpg` | Wikimedia Commons — "Quadcopter camera drone in flight" by Josh Sorenson | CC0 1.0 (public domain dedication) |
+| `recovered-drones.jpg` | Wikimedia Commons — "Shahed drones recovered from Iraq and Ukraine", U.S. Defense Intelligence Agency | Public domain (U.S. federal government work) |
 | `cockpit.png` | TaloNet `gcs/` cockpit render (in-repo) | This repository |
 
-Videos are re-encoded (H.264, audio stripped, scaled to 1600 px, faststart) for web delivery.
+Photographs are downscaled and stripped of metadata for web delivery.
+
+## Original design assets (drawn in-house, © TaloNet)
+
+| File | Description |
+|------|-------------|
+| `blueprint.svg` | Top-view technical drawing of the "Geulmae" coaxial X8 interceptor |
+| `radar.svg` | Animated threat-scope (range rings, bearing ticks, sweep, locked target) |
+| `trajectory.svg` | Flight-log reconstruction plot — capture point back to launch origin |
+| `mesh.svg` | Capture-net lattice texture |
+| `topo.svg` | Topographic survey contour texture |
+| `grid.svg` | Blueprint registration-grid texture |
