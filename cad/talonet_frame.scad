@@ -84,9 +84,12 @@ cinch_guide_d    = 9;      // [4:20] drawstring guide-eyelet bore
 /* [Net aiming gimbal] */
 // SOFTWARE-AIMED launcher: pan/tilt servos point the muzzle so the net is THROWN
 // where commanded (no longer dropped by gravity/luck). Driven by the GCS.
+// SINGLE SOURCE OF TRUTH for the travel limits is gcs/payload_map.py — these
+// ranges MUST match (AIM-PAN SERVO9 -60..+60 deg, AIM-TILT SERVO10 0..75 deg)
+// so the firmware DO_SET_SERVO, the cockpit reticle, and this geometry agree.
 show_aim         = true;
-net_pan          = 0;      // [-60:60] azimuth aim, deg (software-set)
-net_tilt         = 16;     // [0:75] tilt from straight-down toward the nose, deg
+net_pan          = 0;      // [-60:60] AIM-PAN  (SERVO9)  azimuth, deg
+net_tilt         = 16;     // [0:75]   AIM-TILT (SERVO10) tilt from straight-down, deg
 aim_servo        = 24;     // [14:40] aim-servo block size
 gimbal_ring_d    = 92;     // [50:170] pan bearing / tilt-yoke ring diameter
 

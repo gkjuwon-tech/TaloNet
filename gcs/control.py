@@ -20,8 +20,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-PAN_LIMITS = (-60.0, 60.0)    # matches cad net_pan
-TILT_LIMITS = (0.0, 75.0)     # matches cad net_tilt
+# Single source of truth for the gimbal travel (shared with the firmware servo
+# map and the CAD model): see gcs/payload_map.py.
+from .payload_map import PAN_LIMITS, TILT_LIMITS
 
 
 def _clamp(v: float, lo: float, hi: float) -> float:

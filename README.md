@@ -81,6 +81,7 @@
 | [08. 사후 포렌식](docs/08_사후_포렌식.md) | 적 드론 SD/GPS 익스플로잇 → **적 발사지점 좌표**(정당방위 표적정보) |
 | [09. Forensic Appliance Design](docs/09_Forensic_Appliance_Design.md) | ForensIQ-1 카운터-UAS 익스플로잇 기기 하드웨어 설계 (EN) |
 | [10. Forensic Appliance Operator Guide](docs/10_Forensic_Appliance_Operator_Guide.md) | ForensIQ-1 운용 가이드 (EN) |
+| [11. CONOPS & 배포](docs/11_CONOPS_and_Deployment.md) | 군 운용 흐름 + **작동 프로토타입 배포**(실 MAVLink/SITL/Pixhawk) |
 | [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 + 포렌식 기기 (`cad/*.scad`) |
 
 ## 🛡️ 방어 코드 (`defense/`)
@@ -106,9 +107,17 @@
 - **키보드:** `WASD`+`QE` 비행, `RF` 스로틀, `IJKL` 그물 조준, `SPACE` 발사, `C` 조임, `V` 투하, `G` 아밍, `B` E-Stop, `H` 귀환
 - **인터록:** 발사/조임/투하는 **아밍 상태**에서만, E-Stop 래치 시 무장 불가 (하드웨어 doc 06 §11과 동일)
 - **링크:** 명령은 시퀀스+**HMAC 서명**+안티리플레이(`gcs/link.py`) — 실링크는 MAVLink2 서명(`defense/link/`)
-- **코어는 무의존**(`control`/`link` stdlib, 테스트됨), 콕핏만 `pygame`+`numpy`
+- **진짜 하드웨어 연동(목업 아님):** `gcs.link.MavlinkLink`가 **실 MAVLink2**로 FC/SITL/`sim_vehicle`에 붙어 ARM·조준(`DO_SET_SERVO`)·발사(릴레이)·RTL을 보내고, **실 텔레메트리**(자세/GPS/배터리)로 HUD를 그림
+- **단일 진실원천:** 서보 채널·PWM·각도리밋이 [`gcs/payload_map.py`](gcs/payload_map.py) 한 곳 → 콕핏·SCAD·회로(docs/06)가 동일 값
+- **코어는 무의존**(`control`/`payload_map` stdlib, 테스트됨)
 
-실행: `pip install -r requirements-gcs.txt && python -m gcs` · 모듈: [`gcs/README.md`](gcs/README.md)
+작동 프로토타입(하드웨어 없이 풀루프):
+```bash
+pip install -r requirements-gcs.txt
+python -m gcs.sim_vehicle                       # 실 MAVLink 차량 에뮬레이터
+python -m gcs --connect udpout:127.0.0.1:14550  # 콕핏(실명령/실텔레메트리)
+```
+배포(SITL/실 Pixhawk): [`docs/11`](docs/11_CONOPS_and_Deployment.md) · 모듈: [`gcs/README.md`](gcs/README.md)
 
 ## 🔬 카운터-UAS 익스플로잇 (`forensics/`)
 
@@ -141,7 +150,8 @@
 - [x] OpenSCAD 파라메트릭 기체 모델 (`cad/talonet_frame.scad`) — 입구 조임(cinch) + **소프트웨어 조준 그물런처(팬/틸트)**
 - [x] 내부 회로 설계 (docs/06) — 시닝/윈치 2단 결속 + **조준 서보(AIM-PAN/TILT)**
 - [x] 소프트웨어 기획 — 수동 텔레옵 아키텍처 (docs/07, VLM 제거)
-- [x] **수동 조종 콕핏 (`gcs/`)** — FPV+HUD+키보드, 그물 조준/발사 (구현·테스트)
+- [x] **수동 조종 콕핏 (`gcs/`)** — 실 MAVLink 연동(FC/SITL/sim), 실 텔레메트리 HUD, 그물 조준/발사 (구현·테스트)
+- [x] **작동 프로토타입 + CONOPS/배포** (docs/11) — `--connect`로 SITL→실 Pixhawk 동일 코드
 - [x] 사후 포렌식/익스플로잇 (docs/08, `forensics/`) + ForensIQ-1 기기 (docs/09·10)
 - [x] ~~VLM 학습/포팅~~ → **제거**(수동 텔레옵으로 대체)
 - [ ] 회로도(KiCad) / 하네스 / PCB 거버

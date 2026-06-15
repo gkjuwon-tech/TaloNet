@@ -32,11 +32,47 @@ WHITE = (235, 240, 235)
 DIM = (90, 150, 110)
 
 
+def build_link(connect=None, key_secret=b"talonet-demo-key"):
+    """Real MAVLink link if ``connect`` is reachable, else the offline loopback."""
+    if not connect:
+        return LoopbackLink(key=key_secret), "OFFLINE (loopback)"
+    try:
+        from .link import MavlinkLink
+
+        link = MavlinkLink(connect)        # signing opt-in; SITL/FC unsigned by default
+        ok = link.wait_heartbeat(timeout=6.0)
+        if ok:
+            return link, f"MAVLINK {connect}"
+        link.close()
+    except Exception as exc:  # pymavlink missing / no link -> degrade gracefully
+        print(f"[gcs] MAVLink connect failed ({exc}); falling back to loopback")
+    return LoopbackLink(key=key_secret), "OFFLINE (loopback)"
+
+
+def build_camera(video=None, window=(1280, 720)):
+    if video is not None:
+        try:
+            from .camera import OpenCVCamera
+
+            return OpenCVCamera(video, window[0], window[1])
+        except Exception as exc:
+            print(f"[gcs] video source failed ({exc}); using synthetic scene")
+    return SyntheticCamera(window[0], window[1])
+
+
 def run(link=None, camera=None, window=(1280, 720), fps=30, max_frames=None,
-        screenshot=None, key_secret=b"talonet-demo-key", state=None):
-    """Launch the cockpit. ``max_frames``/``screenshot`` enable headless tests."""
+        screenshot=None, key_secret=b"talonet-demo-key", state=None,
+        connect=None, video=None):
+    """Launch the cockpit. ``connect`` (MAVLink string) drives real hardware/SITL;
+    ``max_frames``/``screenshot`` enable headless tests."""
     import numpy as np
     import pygame
+
+    link_status = "OFFLINE (loopback)"
+    if link is None:
+        link, link_status = build_link(connect, key_secret)
+    if camera is None:
+        camera = build_camera(video, window)
 
     pygame.init()
     pygame.font.init()
@@ -48,10 +84,7 @@ def run(link=None, camera=None, window=(1280, 720), fps=30, max_frames=None,
         "m": pygame.font.SysFont("dejavusansmono,consolas,monospace", 16),
         "l": pygame.font.SysFont("dejavusansmono,consolas,monospace", 20, bold=True),
     }
-
     state = state if state is not None else ControlState()
-    link = link if link is not None else LoopbackLink(key=key_secret)
-    camera = camera if camera is not None else SyntheticCamera(window[0], window[1])
 
     t0 = time.time()
     frames = 0
@@ -73,13 +106,15 @@ def run(link=None, camera=None, window=(1280, 720), fps=30, max_frames=None,
         held = {n for n in _HELD_KEYS if pressed[getattr(pygame, "K_" + n)]}
         state.apply_held(held, dt)
         link.send({"type": "SETPOINT", "setpoint": state.setpoint()})
+        telem = link.telemetry() if hasattr(link, "telemetry") else {}
 
         frame = camera.frame(t, state)            # (H, W, 3) RGB
         surf = pygame.surfarray.make_surface(np.transpose(frame, (1, 0, 2)))
         if surf.get_size() != window:
             surf = pygame.transform.smoothscale(surf, window)
         screen.blit(surf, (0, 0))
-        _draw_hud(pygame, screen, fonts, state, link, camera, window, t)
+        _draw_hud(pygame, screen, fonts, state, link, camera, window, t,
+                  telem, link_status)
         pygame.display.flip()
 
         frames += 1
@@ -113,11 +148,14 @@ def _text(screen, font, s, x, y, color=HUD, center=False, right=False):
     screen.blit(img, r)
 
 
-def _draw_hud(pygame, screen, fonts, state, link, camera, window, t):
+def _draw_hud(pygame, screen, fonts, state, link, camera, window, t,
+              telem=None, link_status="OFFLINE (loopback)"):
     w, h = window
     cx, cy = w // 2, h // 2
     sm, md, lg = fonts["s"], fonts["m"], fonts["l"]
     draw = pygame.draw
+    telem = telem or {}
+    live = bool(telem)   # real telemetry present?
 
     # translucent overlay for tapes/bars
     ov = pygame.Surface(window, pygame.SRCALPHA)
@@ -129,6 +167,7 @@ def _draw_hud(pygame, screen, fonts, state, link, camera, window, t):
         draw.line(screen, HUD, (ox, oy), (ox, oy + 26 * dy), 2)
     _text(screen, sm, "MANUAL // HUMAN-IN-THE-LOOP // NO AUTO-ENGAGE", cx, 14,
           AMBER, center=True)
+    _text(screen, sm, f"LINK: {link_status}", 56, 30, HUD if live else AMBER)
 
     # --- REC + mission clock (top-right) ---
     if int(t * 2) % 2 == 0:
@@ -138,7 +177,7 @@ def _draw_hud(pygame, screen, fonts, state, link, camera, window, t):
     _text(screen, sm, "EO/IR  CAM-1  x1.0", w - 40, 50, DIM, right=True)
 
     # --- heading tape (top) ---
-    hdg = (t * 8 + state.yaw * 40) % 360
+    hdg = telem.get('hdg', (t * 8 + state.yaw * 40) % 360)
     tw = 460
     draw.rect(ov, (0, 0, 0, 110), (cx - tw // 2, 30, tw, 26))
     for d in range(-40, 41, 5):
@@ -153,7 +192,7 @@ def _draw_hud(pygame, screen, fonts, state, link, camera, window, t):
     _text(screen, sm, f"HDG {int(hdg):03d}", cx, 66, AMBER, center=True)
 
     # --- bank arc + roll pointer (top centre) ---
-    roll_deg = state.roll * 30
+    roll_deg = telem.get('roll', state.roll * 30)
     rb = 150
     for a in (-60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60):
         ar = math.radians(-90 + a)
@@ -168,7 +207,7 @@ def _draw_hud(pygame, screen, fonts, state, link, camera, window, t):
                  _rot(px + 6, py - 12, px, py, ar + math.pi / 2)])
 
     # --- pitch ladder (rotated by bank) ---
-    pitch_deg = state.pitch * 15
+    pitch_deg = telem.get('pitch', state.pitch * 15)
     ang = math.radians(roll_deg)
     ppd = 7
     for v in (-20, -15, -10, -5, 5, 10, 15, 20):
@@ -197,8 +236,8 @@ def _draw_hud(pygame, screen, fonts, state, link, camera, window, t):
     draw.circle(screen, HUD, (cx, cy), 3)
 
     # --- speed tape (left) + altitude tape (right) ---
-    spd = state.throttle * 28.0
-    alt = 118 + math.sin(t * 0.5) * 4
+    spd = telem.get('spd', state.throttle * 28.0)
+    alt = telem.get('alt', 118 + math.sin(t * 0.5) * 4)
     _tape(pygame, screen, ov, sm, 70, cy, spd, "SPD m/s", HUD)
     _tape(pygame, screen, ov, sm, w - 70, cy, alt, "ALT m", HUD, right=True)
 
@@ -238,12 +277,21 @@ def _draw_hud(pygame, screen, fonts, state, link, camera, window, t):
         st, sc = "ARMED", HUD
     else:
         st, sc = "SAFE", AMBER
+    batt = telem.get("batt")
+    sats = telem.get("sats")
+    lat = telem.get("lat", 37.5012)
+    lon = telem.get("lon", 127.0431)
+    link_lbl = ("LINK " + ("LIVE" if live else "SIM") + " #"
+                + str(getattr(link, "seq", 0)) + (" SIGNED" if getattr(
+                    link, "signing_enabled", True) else ""))
     segs = [
         (lg, state.mode, HUD), (lg, st, sc),
         (md, f"THR {state.throttle * 100:3.0f}%", WHITE),
         (md, f"NET P{state.net_pan:+.0f} T{state.net_tilt:.0f}", WHITE),
-        (md, f"LINK#{getattr(link, 'seq', 0)} SIGNED", DIM),
-        (md, "37.5012N 127.0431E", WHITE),
+        (md, link_lbl, HUD if live else DIM),
+        (md, f"BATT {batt:.0f}%" if batt is not None else "BATT --", WHITE),
+        (md, f"GPS {sats}sat" if sats is not None else "GPS --", DIM),
+        (md, f"{lat:.4f}N {lon:.4f}E", WHITE),
         (md, time.strftime("%H:%M:%SZ", time.gmtime()), WHITE),
     ]
     x = 16
