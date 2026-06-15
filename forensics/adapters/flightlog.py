@@ -39,6 +39,22 @@ def _usec_to_utc(usec: int) -> str:
     return datetime.fromtimestamp(usec / 1e6, tz=timezone.utc).isoformat()
 
 
+# Parameters worth pulling for counter-UAS intelligence (prefix match):
+# geofence (their boundary / protected AO), failsafe/RTL behaviour, battery
+# capacity (endurance -> range ring), airframe class, MAV/GCS network IDs, radio
+# protocol, cruise speed. Matched case-insensitively by prefix.
+_PARAM_INTEL_PREFIXES = (
+    "FENCE", "RTL_ALT", "RTL_SPEED", "FS_", "BATT_CAPACITY", "BATT_LOW",
+    "FRAME_CLASS", "FRAME_TYPE", "Q_ENABLE", "SYSID_THISMAV", "SYSID_MYGCS",
+    "SERIAL1_PROTOCOL", "SERIAL2_PROTOCOL", "WPNAV_SPEED", "GPS_TYPE",
+)
+
+
+def _param_of_interest(name: str) -> bool:
+    up = name.upper()
+    return any(up.startswith(p) for p in _PARAM_INTEL_PREFIXES)
+
+
 # ---------------------------------------------------------------------------
 # ArduPilot — pymavlink
 # ---------------------------------------------------------------------------
@@ -68,10 +84,42 @@ class ArduPilotLogParser:
 
     def _parse_dataflash(self, mlog, track: FlightTrack) -> None:
         while True:
-            m = mlog.recv_match(type=["GPS", "ORGN"])
+            m = mlog.recv_match(
+                type=["GPS", "ORGN", "PARM", "CMD", "MSG", "VER", "BAT"]
+            )
             if m is None:
                 break
             mtype = m.get_type()
+            if mtype == "PARM":
+                if _param_of_interest(m.Name):
+                    track.params[m.Name] = f"{m.Value:g}"
+                continue
+            if mtype == "CMD":
+                track.mission.append(
+                    TrackPoint(
+                        t_utc="", lat=m.Lat * 1e-7 if abs(m.Lat) > 1000 else float(m.Lat),
+                        lon=m.Lng * 1e-7 if abs(m.Lng) > 1000 else float(m.Lng),
+                        alt_m=float(getattr(m, "Alt", 0)),
+                        fix_quality=f"cmd{getattr(m, 'CId', '?')}",
+                    )
+                )
+                continue
+            if mtype == "MSG":
+                txt = str(getattr(m, "Message", ""))
+                if any(k in txt for k in ("Ardu", "PX4", "ChibiOS", "FMUv", "CubeOrange")):
+                    track.firmware.setdefault("banner", txt)
+                continue
+            if mtype == "VER":
+                track.firmware["board"] = str(getattr(m, "BU", getattr(m, "board_type", "")))
+                gh = getattr(m, "GH", getattr(m, "fw_hash", ""))
+                if gh:
+                    track.firmware["git"] = str(gh)
+                continue
+            if mtype == "BAT":
+                used = getattr(m, "CurrTot", None)
+                if used:
+                    track.energy_mah = max(track.energy_mah or 0.0, float(used))
+                continue
             if mtype == "ORGN":
                 # Type 0 = origin, 1 = set-home
                 pt = TrackPoint(
@@ -96,11 +144,15 @@ class ArduPilotLogParser:
             )
         if track.home_position is None and track.points:
             track.home_position = track.points[0]
+        if track.energy_mah is None and "BATT_CAPACITY" in track.params:
+            track.energy_mah = float(track.params["BATT_CAPACITY"])
 
     def _parse_tlog(self, mlog, track: FlightTrack) -> None:
         while True:
             m = mlog.recv_match(
-                type=["GLOBAL_POSITION_INT", "GPS_RAW_INT", "HOME_POSITION"]
+                type=["GLOBAL_POSITION_INT", "GPS_RAW_INT", "HOME_POSITION",
+                      "PARAM_VALUE", "MISSION_ITEM_INT", "MISSION_ITEM",
+                      "STATUSTEXT", "AUTOPILOT_VERSION", "BATTERY_STATUS"]
             )
             if m is None:
                 break
@@ -110,6 +162,36 @@ class ArduPilotLogParser:
                     t_utc="", lat=m.latitude * 1e-7, lon=m.longitude * 1e-7,
                     alt_m=m.altitude * 1e-3,
                 )
+                continue
+            if mtype == "PARAM_VALUE":
+                name = m.param_id
+                name = name.decode() if isinstance(name, bytes) else str(name)
+                name = name.split("\x00")[0]
+                if _param_of_interest(name):
+                    track.params[name] = f"{m.param_value:g}"
+                continue
+            if mtype in ("MISSION_ITEM_INT", "MISSION_ITEM"):
+                scale = 1e-7 if mtype == "MISSION_ITEM_INT" else 1.0
+                track.mission.append(
+                    TrackPoint(
+                        t_utc="", lat=m.x * scale, lon=m.y * scale, alt_m=float(m.z),
+                        fix_quality=f"cmd{getattr(m, 'command', '?')}",
+                    )
+                )
+                continue
+            if mtype == "STATUSTEXT":
+                txt = str(getattr(m, "text", ""))
+                if any(k in txt for k in ("Ardu", "PX4", "ChibiOS", "FMUv", "Cube")):
+                    track.firmware.setdefault("banner", txt)
+                continue
+            if mtype == "AUTOPILOT_VERSION":
+                track.firmware["flight_sw"] = str(getattr(m, "flight_sw_version", ""))
+                track.firmware["board"] = str(getattr(m, "board_version", ""))
+                continue
+            if mtype == "BATTERY_STATUS":
+                used = getattr(m, "current_consumed", None)
+                if used and used > 0:
+                    track.energy_mah = max(track.energy_mah or 0.0, float(used))
                 continue
             if mtype == "GPS_RAW_INT":
                 if getattr(m, "fix_type", 0) < 3:
@@ -131,6 +213,8 @@ class ArduPilotLogParser:
                 )
         if track.home_position is None and track.points:
             track.home_position = track.points[0]
+        if track.energy_mah is None and "BATT_CAPACITY" in track.params:
+            track.energy_mah = float(track.params["BATT_CAPACITY"])
 
 
 # ---------------------------------------------------------------------------

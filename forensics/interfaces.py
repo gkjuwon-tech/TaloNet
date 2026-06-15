@@ -87,6 +87,11 @@ class FlightTrack:
     home_position: Optional[TrackPoint] = None
     waypoints: list[TrackPoint] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    # --- richer exploitation harvest (filled when the log format carries it) ---
+    params: dict[str, str] = field(default_factory=dict)  # curated intel parameters
+    mission: list[TrackPoint] = field(default_factory=list)  # planned waypoints/targets
+    firmware: dict[str, str] = field(default_factory=dict)  # autopilot/version/board/hwid
+    energy_mah: Optional[float] = None  # battery capacity used -> endurance/range
 
 
 @dataclass
@@ -107,6 +112,15 @@ class AnalysisFindings:
     evidence_basis: list[str] = field(default_factory=list)  # cited log/tool refs
     file_inventory: list[dict[str, str]] = field(default_factory=list)  # path/size/sha256
     map_html_path: Optional[str] = None  # rendered folium/Leaflet trajectory map
+    # --- expanded counter-UAS intelligence harvest ---
+    launch_sites: list[TrackPoint] = field(default_factory=list)  # per-sortie origins
+    operating_radius_m: Optional[float] = None  # range-ring constraint on the base
+    recurring_origin: bool = False  # >=2 sorties from the same area (base candidate)
+    mission_plan: list[TrackPoint] = field(default_factory=list)  # planned waypoints/targets
+    parameters_of_interest: dict[str, str] = field(default_factory=dict)  # fence/failsafe/radio
+    firmware: dict[str, str] = field(default_factory=dict)  # autopilot/version/board/hwid
+    timeline: dict[str, str] = field(default_factory=dict)  # first/last UTC, duration, sorties
+    imaged_locations: list[dict[str, str]] = field(default_factory=list)  # geotagged ISR media
 
     def merge(self, other: "AnalysisFindings") -> "AnalysisFindings":
         """Combine two findings (e.g. content + trajectory) into one."""
@@ -122,6 +136,16 @@ class AnalysisFindings:
             evidence_basis=self.evidence_basis + other.evidence_basis,
             file_inventory=self.file_inventory + other.file_inventory,
             map_html_path=self.map_html_path or other.map_html_path,
+            launch_sites=self.launch_sites or other.launch_sites,
+            operating_radius_m=self.operating_radius_m
+            if self.operating_radius_m is not None else other.operating_radius_m,
+            recurring_origin=self.recurring_origin or other.recurring_origin,
+            mission_plan=self.mission_plan or other.mission_plan,
+            parameters_of_interest={
+                **self.parameters_of_interest, **other.parameters_of_interest},
+            firmware={**self.firmware, **other.firmware},
+            timeline={**self.timeline, **other.timeline},
+            imaged_locations=self.imaged_locations + other.imaged_locations,
         )
 
 

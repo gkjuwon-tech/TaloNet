@@ -67,6 +67,41 @@ def format_text_report(
     L.append("-" * 40)
     L.append("INTENDED TARGET (DEFENDED ASSET)")
     L.append(f"  {_pt(findings.target_estimate)}")
+    if findings.operating_radius_m or findings.launch_sites:
+        L.append("-" * 40)
+        L.append("ENEMY BASING (RANGE RING)")
+        if findings.operating_radius_m:
+            L.append(f"  operating radius ~{findings.operating_radius_m / 1000:.2f} km "
+                     "from launch")
+        if len(findings.launch_sites) >= 2:
+            L.append(f"  {len(findings.launch_sites)} sortie origins; "
+                     + ("RECURRING (fixed base)" if findings.recurring_origin
+                        else "dispersed"))
+    if findings.mission_plan:
+        L.append("-" * 40)
+        L.append(f"PLANNED MISSION ({len(findings.mission_plan)} waypoints)")
+        for i, wp in enumerate(findings.mission_plan[:8]):
+            L.append(f"  WP{i} {wp.lat:.6f},{wp.lon:.6f} {wp.fix_quality or ''}")
+    if findings.firmware:
+        L.append("-" * 40)
+        L.append("ATTRIBUTION (firmware / board)")
+        for k, v in findings.firmware.items():
+            L.append(f"  {k}: {v}")
+    if findings.parameters_of_interest:
+        L.append("-" * 40)
+        L.append("PARAMETERS OF INTEREST (fence/failsafe/radio)")
+        for k, v in findings.parameters_of_interest.items():
+            L.append(f"  {k} = {v}")
+    if findings.imaged_locations:
+        L.append("-" * 40)
+        L.append(f"ISR IMAGERY GEOTAGS ({len(findings.imaged_locations)})")
+        for g in findings.imaged_locations[:8]:
+            L.append(f"  {g['lat']},{g['lon']}  {g.get('file', '')}")
+    if findings.timeline:
+        L.append("-" * 40)
+        L.append("TIMELINE")
+        for k, v in findings.timeline.items():
+            L.append(f"  {k}: {v}")
     L.append("-" * 40)
     L.append("TRAJECTORY / PATTERN OF LIFE")
     for line in findings.evidence_basis:
@@ -169,7 +204,40 @@ class PdfReportBuilder:
         body(f"The hostile UAS was aimed at: {_pt(findings.target_estimate)}")
         pdf.ln(1)
 
-        h("3. Trajectory & Pattern of Life")
+        if findings.operating_radius_m or len(findings.launch_sites) >= 2:
+            h("3. Enemy Basing (Range Ring)")
+            if findings.operating_radius_m:
+                body(f"- operating radius ~{findings.operating_radius_m / 1000:.2f} km "
+                     "from launch => base lies within this ring")
+            if len(findings.launch_sites) >= 2:
+                body(f"- {len(findings.launch_sites)} sortie origins; "
+                     + ("RECURRING (fixed launch site / enemy basing)"
+                        if findings.recurring_origin else "dispersed launch points"))
+            pdf.ln(1)
+
+        if findings.mission_plan:
+            h(f"4. Planned Mission ({len(findings.mission_plan)} waypoints)")
+            for i, wp in enumerate(findings.mission_plan[:12]):
+                body(f"- WP{i}: {wp.lat:.6f}, {wp.lon:.6f}  {wp.fix_quality or ''}")
+            pdf.ln(1)
+
+        if findings.firmware or findings.parameters_of_interest:
+            h("5. Attribution & Configuration")
+            for k, v in findings.firmware.items():
+                body(f"- firmware {k}: {v}")
+            for k, v in findings.parameters_of_interest.items():
+                body(f"- param {k} = {v}")
+            pdf.ln(1)
+
+        if findings.imaged_locations or findings.timeline:
+            h("6. ISR Imagery & Timeline")
+            for g in findings.imaged_locations[:12]:
+                body(f"- imaged {g['lat']}, {g['lon']}  {g.get('file', '')}")
+            for k, v in findings.timeline.items():
+                body(f"- {k}: {v}")
+            pdf.ln(1)
+
+        h("7. Trajectory & Pattern of Life")
         for line in findings.evidence_basis or ["no trajectory recovered"]:
             body(f"- {line}")
         if findings.map_html_path:
@@ -178,19 +246,19 @@ class PdfReportBuilder:
         pdf.ln(1)
 
         if findings.identifiers:
-            h("4. Identifiers (IFF / Attribution)")
+            h("8. Identifiers (IFF / Attribution)")
             for k, v in findings.identifiers.items():
                 body(f"- {k}: {v}")
             pdf.ln(1)
 
-        h("5. Content & Payload")
+        h("9. Content & Payload")
         for line in findings.payload_assessment or ["no content findings"]:
             body(f"- {line}")
         body(f"- files inventoried: {len(findings.file_inventory)}; "
              f"media records: {len(findings.media_metadata)}")
         pdf.ln(1)
 
-        h("6. Intelligence Provenance (hash-chained)")
+        h("10. Intelligence Provenance (hash-chained)")
         for ev in custody_log:
             wit = f" / witness {ev['witness']}" if ev.get("witness") else ""
             body(f"[{ev.get('timestamp', '')}] {ev.get('action', '')} by "
@@ -198,7 +266,7 @@ class PdfReportBuilder:
         pdf.ln(1)
 
         if self.tool_versions:
-            h("7. Tooling & Provenance")
+            h("11. Tooling & Provenance")
             for k, v in self.tool_versions.items():
                 body(f"- {k}: {v}")
             pdf.ln(1)

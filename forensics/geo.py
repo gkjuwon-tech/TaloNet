@@ -75,13 +75,16 @@ class Dwell:
         return self.span
 
 
-def longest_dwell(points: list[tuple[float, float]], radius_m: float = 60.0) -> Dwell | None:
+def longest_dwell(
+    points: list[tuple[float, float]], radius_m: float = 60.0, min_span: int = 3
+) -> Dwell | None:
     """Find the longest run of consecutive samples staying within ``radius_m``.
 
     A simple, explainable loiter detector: slides an anchor and counts how long
     the track remains within ``radius_m`` of it. The longest such run is the
     strongest "hovered here" signal — a candidate target/observation point.
-    Returns ``None`` if there are too few points.
+    Returns ``None`` if there are too few points or no run reaches ``min_span``
+    (so a steadily-moving track is not mistaken for a loiter).
     """
     if len(points) < 3:
         return None
@@ -101,4 +104,4 @@ def longest_dwell(points: list[tuple[float, float]], radius_m: float = 60.0) -> 
             clon = sum(p[1] for p in run) / len(run)
             best = Dwell(clat, clon, i, j - 1, span)
         i = j if j > i + 1 else i + 1
-    return best
+    return best if best is not None and best.span >= min_span else None

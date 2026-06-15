@@ -85,7 +85,94 @@ class TrajectoryReconstructor:
                 f"-> ({bbox.max_lat:.5f},{bbox.max_lon:.5f})"
             )
         self._altitude_note(primary, findings)
+        self._expand_intel(tracks, primary, findings)
         return findings
+
+    # -- expanded SD-card intelligence harvest ---------------------------------
+    def _expand_intel(self, tracks, primary, findings) -> None:
+        """Wring the rest of the gold out of the card beyond a single coordinate.
+
+        Multiple sortie origins (-> recurring base), operating radius (-> range
+        ring), planned mission (-> intended route/targets), parameters
+        (geofence/failsafe/radio IDs), firmware/board (attribution), endurance,
+        and an operations timeline.
+        """
+        # per-sortie launch sites + operating radius (range-ring constraint)
+        max_radius = 0.0
+        for tr in tracks:
+            if not tr.points:
+                continue
+            origin = tr.home_position or tr.points[0]
+            findings.launch_sites.append(origin)
+            max_radius = max(
+                max_radius,
+                max(geo.haversine_m(origin.lat, origin.lon, p.lat, p.lon)
+                    for p in tr.points),
+            )
+        findings.operating_radius_m = round(max_radius, 1) if max_radius else None
+        if findings.operating_radius_m:
+            findings.evidence_basis.append(
+                f"operating radius from launch ~{findings.operating_radius_m / 1000:.2f} km "
+                "=> base lies within this range ring of the launch site"
+            )
+        # recurring origin across sorties => fixed enemy basing
+        sites = findings.launch_sites
+        if len(sites) >= 2:
+            spread = max(
+                geo.haversine_m(sites[0].lat, sites[0].lon, s.lat, s.lon) for s in sites
+            )
+            findings.recurring_origin = spread <= 500.0
+            findings.evidence_basis.append(
+                f"{len(sites)} sorties; launch spread ~{spread:.0f} m -> "
+                + ("RECURRING ORIGIN (fixed launch site / enemy basing)"
+                   if findings.recurring_origin else "dispersed launch points")
+            )
+        # planned mission (intended route / next targets)
+        rich = max(tracks, key=lambda t: len(t.mission), default=None)
+        if rich and rich.mission:
+            findings.mission_plan = rich.mission
+            findings.evidence_basis.append(
+                f"recovered planned mission: {len(rich.mission)} waypoints "
+                "(intended ingress route / further targets)"
+            )
+        # parameters of interest (geofence / failsafe / radio IDs / frame)
+        for tr in tracks:
+            findings.parameters_of_interest.update(tr.params)
+            findings.firmware.update(tr.firmware)
+        if "FENCE_RADIUS" in findings.parameters_of_interest or any(
+            k.startswith("FENCE") for k in findings.parameters_of_interest
+        ):
+            findings.evidence_basis.append(
+                "geofence parameters recovered -> reveals the boundary/AO the "
+                "operator configured around their own position"
+            )
+        # endurance -> range estimate (corroborates the range ring)
+        energy = next((t.energy_mah for t in tracks if t.energy_mah), None)
+        speed = findings.parameters_of_interest.get("WPNAV_SPEED")
+        if energy:
+            findings.payload_assessment.append(
+                f"battery energy used ~{energy:.0f} mAh"
+                + (f"; cruise ~{float(speed) / 100:.1f} m/s" if speed else "")
+                + " -> endurance/range estimate constrains base distance"
+            )
+        # operations timeline (time-of-attack pattern)
+        stamps = sorted(p.t_utc for t in tracks for p in t.points
+                        if p.t_utc and p.t_utc[0].isdigit())
+        if stamps:
+            findings.timeline = {
+                "first_fix_utc": stamps[0],
+                "last_fix_utc": stamps[-1],
+                "sorties": str(len([t for t in tracks if t.points])),
+            }
+            findings.evidence_basis.append(
+                f"operations window {stamps[0]} -> {stamps[-1]} "
+                f"({findings.timeline['sorties']} sortie(s)) -> time-of-attack pattern"
+            )
+        if findings.firmware:
+            findings.evidence_basis.append(
+                "firmware/board recovered -> attribution: "
+                + ", ".join(f"{k}={v}" for k, v in list(findings.firmware.items())[:3])
+            )
 
     def render_map(self, tracks: list[FlightTrack], out_html: str) -> str:
         import folium  # lazy: MIT dependency (Leaflet/OSM)
@@ -115,6 +202,21 @@ class TrajectoryReconstructor:
             list(target), tooltip="Intended target (defended asset)",
             icon=folium.Icon(color="blue", icon="screenshot"),
         ).add_to(fmap)
+        # additional sortie origins (recurring base evidence)
+        for tr in tracks:
+            if tr is primary or not tr.points:
+                continue
+            o = tr.home_position or tr.points[0]
+            folium.Marker(
+                [o.lat, o.lon], tooltip="Sortie origin",
+                icon=folium.Icon(color="orange", icon="flag"),
+            ).add_to(fmap)
+        # planned mission waypoints (intended route / further targets)
+        for i, wp in enumerate(primary.mission):
+            folium.CircleMarker(
+                [wp.lat, wp.lon], radius=4, color="#2030c0", fill=True,
+                tooltip=f"Planned WP{i} ({wp.fix_quality or ''})",
+            ).add_to(fmap)
         if bbox:
             fmap.fit_bounds([[bbox.min_lat, bbox.min_lon], [bbox.max_lat, bbox.max_lon]])
         fmap.save(out_html)

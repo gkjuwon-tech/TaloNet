@@ -106,7 +106,9 @@ the write-once Evidence USB only.
 4. PARSE   content + flight logs: pymavlink (.bin/.tlog), pyulog (.ulg),
            pynmea2 (NMEA), dji-log-parser (DJI)
 5. ANALYZE HOSTILE LAUNCH SITE (origin) + uncertainty radius + confidence;
-           intended target (loiter); folium map  (trajectory.py)
+           range ring (operating radius/endurance) + recurring base; planned
+           mission (waypoints); firmware/board attribution; geofence/radio
+           params; geotagged ISR imagery; timeline; intended target; folium map
 6. REPORT  fpdf2 counter-UAS target-intel PDF + thermal text report
 7. OUTPUT  -> built-in thermal printer (target packet + provenance appendix +
               ROE/LOAC caveat) -> write-once Evidence USB (full PDF + map)

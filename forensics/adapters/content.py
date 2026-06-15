@@ -98,11 +98,33 @@ class FileSystemContentAnalyzer:
 
         if media_paths:
             findings.media_metadata = self._media_metadata(media_paths)
+            self._harvest_geotags(findings)
         findings.payload_assessment.append(
             f"{len(findings.file_inventory)} files inventoried, "
             f"{len(media_paths)} media files"
         )
         return findings
+
+    def _harvest_geotags(self, findings: AnalysisFindings) -> None:
+        """Pull GPS-tagged ISR imagery (where the hostile UAS was looking) and
+        the capturing camera (attribution) out of the media metadata."""
+        for rec in findings.media_metadata:
+            lat = rec.get("GPSLatitude")
+            lon = rec.get("GPSLongitude")
+            if lat and lon:
+                try:
+                    findings.imaged_locations.append({
+                        "file": rec.get("SourceFile", rec.get("FileName", "?")),
+                        "lat": f"{float(lat):.6f}", "lon": f"{float(lon):.6f}",
+                        "time": rec.get("DateTimeOriginal", rec.get("CreateDate", "")),
+                    })
+                except ValueError:
+                    continue
+            if "camera" not in findings.identifiers:
+                make = rec.get("Make", "")
+                model = rec.get("Model", "")
+                if make or model:
+                    findings.identifiers["camera"] = f"{make} {model}".strip()
 
     def discover_logs(self, image: AcquiredImage) -> list[str]:
         root = self._root(image)

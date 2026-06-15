@@ -141,11 +141,15 @@ which decides any response under ROE/LOAC. **The appliance does not engage.**
 | **Header** | Evidence ID, UTC generation time, geolocation confidence (0–1). |
 | **1. Hostile launch site** | The actionable **origin of the attack**: coordinates **± uncertainty radius**, confidence. Corroborate before any action. |
 | **2. Intended target** | The defended asset the hostile UAS was aimed at. |
-| **3. Trajectory & pattern of life** | Parser provenance, ingress path, launch→target range/bearing (+ back-azimuth), operating-area box, loiter, recurring-origin note. |
-| **4. Identifiers (IFF)** | Recovered FCC ID / serial / MAC, for attribution. |
-| **5. Content & payload** | File inventory count, media metadata, altitude profile. |
-| **6. Provenance appendix** | Every step, actor, witness, timestamp (hash-chained). |
-| **7. Tooling** | Exact parser/library versions used. |
+| **3. Enemy basing (range ring)** | **Operating radius** from launch + endurance/cruise → the **distance ring the base sits within**; multiple sortie origins → **recurring (fixed) launch site**. |
+| **4. Planned mission** | Recovered **waypoints / loiter points** = the operator's intended route and **further targets**. |
+| **5. Attribution & configuration** | **Firmware/board** (which build/faction) + parameters of interest: **geofence** (their boundary/AO), failsafe/RTL, **radio SYSID** (operator/GCS), airframe class. |
+| **6. ISR imagery & timeline** | **Geotagged photos** (what they surveilled) + camera; operations window / sortie count → **time-of-attack pattern**. |
+| **7. Trajectory & pattern of life** | Parser provenance, ingress path, launch→target range/bearing (+ back-azimuth), operating-area box. |
+| **8. Identifiers (IFF)** | Recovered FCC ID / serial / MAC / camera, for attribution. |
+| **9. Content & payload** | File inventory count, media metadata, altitude/energy profile. |
+| **10. Provenance appendix** | Every step, actor, witness, timestamp (hash-chained). |
+| **11. Tooling** | Exact parser/library versions used. |
 | **Caveat (ROE/LOAC)** | Intelligence product, **not a fire order**; engagement is a human decision under ROE/LOAC; not against civilians/civilian objects. |
 
 > **Every estimate carries a confidence and an uncertainty radius. Nothing is

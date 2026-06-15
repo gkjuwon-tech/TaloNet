@@ -39,7 +39,7 @@ def _write_nmea(path):
             fh.write(f"${body}*{cs:02X}\n")
 
 
-def _write_tlog(path):
+def _write_tlog(path, rich=False):
     from pymavlink.dialects.v20 import common as mav2
 
     mav = mav2.MAVLink(None, srcSystem=1, srcComponent=1)
@@ -47,6 +47,17 @@ def _write_tlog(path):
     with open(path, "wb") as fh:
         fh.write(struct.pack(">Q", base) + mav2.MAVLink_home_position_message(
             375000000, 1270000000, 120000, 0, 0, 0, [0] * 4, 0, 0, 0).pack(mav))
+        if rich:
+            fh.write(struct.pack(">Q", base) + mav2.MAVLink_statustext_message(
+                6, b"ArduCopter V4.5.7 (e1b4f6c2)").pack(mav))
+            for name, val in [(b"FENCE_RADIUS", 300.0), (b"BATT_CAPACITY", 22000.0),
+                              (b"WPNAV_SPEED", 1200.0), (b"SYSID_MYGCS", 255.0)]:
+                fh.write(struct.pack(">Q", base) + mav2.MAVLink_param_value_message(
+                    name, val, 9, 4, 0).pack(mav))
+            for seq, (la, lo, cmd) in enumerate(
+                    [(375050000, 1270060000, 16), (375088000, 1270110000, 17)]):
+                fh.write(struct.pack(">Q", base) + mav2.MAVLink_mission_item_int_message(
+                    1, 1, seq, 0, cmd, 0, 1, 0, 0, 0, 0, la, lo, 120.0, 0).pack(mav))
         for i in range(30):
             lat, lon = 375000000 + i * 8000, 1270000000 + i * 10000
             fh.write(struct.pack(">Q", base + i * 1_000_000)
@@ -91,6 +102,27 @@ class TestArduPilotTlog(unittest.TestCase):
             self.assertIsNotNone(track.home_position)
             self.assertAlmostEqual(track.home_position.lat, 37.5, delta=1e-4)
             self.assertTrue(track.points[0].t_utc)  # UTC derived from time_usec
+
+    def test_expanded_intel_harvest(self):
+        from forensics.adapters.trajectory import TrajectoryReconstructor
+
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "rich.tlog")
+            _write_tlog(p, rich=True)
+            track = ArduPilotLogParser().parse(p)
+            # parameters of interest, mission plan, firmware harvested
+            self.assertEqual(track.params.get("FENCE_RADIUS"), "300")
+            self.assertEqual(track.params.get("BATT_CAPACITY"), "22000")
+            self.assertEqual(len(track.mission), 2)
+            self.assertIn("banner", track.firmware)
+            self.assertEqual(track.energy_mah, 22000.0)  # from BATT_CAPACITY fallback
+            # synthesized into findings
+            findings = TrajectoryReconstructor().analyze([track])
+            self.assertEqual(len(findings.mission_plan), 2)
+            self.assertIn("FENCE_RADIUS", findings.parameters_of_interest)
+            self.assertTrue(findings.firmware)
+            self.assertGreater(findings.operating_radius_m, 0)
+            self.assertEqual(findings.timeline.get("sorties"), "1")
 
 
 @unittest.skipUnless(HAVE_FPDF, "fpdf2 not installed")
