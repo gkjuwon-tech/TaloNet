@@ -1,0 +1,8 @@
+# Manual teleop cockpit (gcs/). The control core (gcs.control / gcs.link) is
+# stdlib-only and always runs; these enable the windowed cockpit + camera pane.
+
+pygame>=2.5     # cockpit window, keyboard input, rendering
+numpy>=1.24     # FPV camera frames / HUD compositing
+
+# Optional:
+#   opencv-python   # real EO/IR feed via gcs.camera.OpenCVCamera (device/RTSP/UDP)
