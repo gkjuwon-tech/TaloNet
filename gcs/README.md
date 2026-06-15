@@ -1,10 +1,12 @@
 # `gcs/` — TaloNet manual teleop cockpit
 
 > **Speed first, human in the loop, no VLM.** A ground-control app you install on a
-> laptop: the FPV camera fills the screen, and you fly the mothership **and**
-> aim/fire the software-aimed net from the keyboard. Onboard VLM autonomy was
-> dropped from the control loop — a human reacts faster than a 2-second inference,
-> and the engagement decision stays with the operator.
+> laptop: a realistic **EO/IR FPV feed** fills the screen under a **professional
+> military HUD** (boresight + pitch ladder, bank arc, heading/speed/altitude tapes,
+> a HOSTILE-UAS target box, and the green NET-AIM reticle), and you fly the
+> mothership **and** aim/fire the software-aimed net from the keyboard. Onboard VLM
+> autonomy was dropped — a human reacts faster than a 2-second inference, and the
+> engagement decision stays with the operator.
 
 ![cockpit](../docs/img/cockpit.png)
 
