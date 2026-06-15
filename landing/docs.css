@@ -28,7 +28,6 @@
   --line: rgba(255, 255, 255, 0.16);
   --line-soft: rgba(255, 255, 255, 0.08);
   --panel: #0c0c0d;
-  --accent: #c08a4a;
   --pad: clamp(20px, 5vw, 56px);
 }
 
@@ -123,8 +122,8 @@ td code { white-space: nowrap; }
 
 /* small note / callout */
 .note {
-  border-left: 2px solid var(--accent); padding: 4px 0 4px 18px; margin: 22px 0;
-  color: var(--fg-dim); font-size: 0.95rem;
+  border-left: 1px solid var(--line); padding: 2px 0 2px 18px; margin: 22px 0;
+  color: var(--fg-mute); font-size: 0.95rem;
 }
 .toc {
   font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.04em;
