@@ -1,5 +1,5 @@
 // =============================================================================
-// TaloNet "그물매 (Geulmae)" — parametric mothership frame
+// TaloNet "Peregrine" — parametric mothership frame
 // X8 coaxial octocopter counter-UAS net interceptor
 //
 // Units: millimetres. Coordinate frame: +X = nose/forward, +Z = up.

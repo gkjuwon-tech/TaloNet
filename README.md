@@ -43,7 +43,7 @@
 ## 🧩 시스템 구성
 
 ```
-                  ☁️  TaloNet "그물매(Geulmae)" 모선드론
+                  ☁️  TaloNet "Peregrine" 모선드론
                  /  \
                 /    \   ← 4축 헥사/옥타콥터, 그물런처 탑재
    [소프트웨어 조준 그물런처]  [하방 포획 그물]
@@ -58,7 +58,7 @@
 
 | 구성요소 | 코드네임 | 설명 |
 |----------|----------|------|
-| 모선 드론 | **그물매 (Geulmae)** | 적 드론보다 ㅈㄴ 큰 헌터-킬러 플랫폼 |
+| 모선 드론 | **Peregrine** | 적 드론보다 ㅈㄴ 큰 헌터-킬러 플랫폼 |
 | 포획 그물 | **TaloNet** | **소프트웨어 조준**(팬/틸트) 발사형 자기수축 케블라 그물 |
 | 포획 운반 | **그물 캐리(Net Carry)** | 잡은 드론을 그물째 담아 매달고 운반 (별도 케이지 X) |
 | 조종 | **수동 텔레옵 콕핏 (`gcs/`)** | FPV + HUD, 키보드로 비행·그물 조준/발사 (VLM 제거, 사람이 결정) |
@@ -71,7 +71,7 @@
 | 문서 | 내용 |
 |------|------|
 | [00. 기획문서](docs/00_기획문서.md) | 비전, CONOPS, 방산사업 모델, 윤리, 로드맵 |
-| [01. 드론 하드웨어 스펙](docs/01_드론_스펙.md) | 모선 드론 "그물매" 풀 스펙 |
+| [01. 드론 하드웨어 스펙](docs/01_드론_스펙.md) | 모선 드론 "Peregrine" 풀 스펙 |
 | [02. 내장 VLM 모델](docs/02_내장_VLM_모델.md) | ⚠️ ~~HawkEye-VLM~~ **제거됨**(수동 텔레옵으로 대체, 참고용 보존) |
 | [03. 내장 센서](docs/03_내장_센서.md) | 센서 스위트 + 융합 파이프라인 |
 | [04. 추가 부품](docs/04_추가_부품.md) | 그물런처, 그물운반, 투하 메커니즘 등 |
@@ -83,12 +83,12 @@
 | [10. Forensic Appliance Operator Guide](docs/10_Forensic_Appliance_Operator_Guide.md) | ForensIQ-1 운용 가이드 (EN) |
 | [11. CONOPS & 배포](docs/11_CONOPS_and_Deployment.md) | 군 운용 흐름 + **작동 프로토타입 배포**(실 MAVLink/SITL/Pixhawk) |
 | [12. 차고 수제작 가이드](docs/12_Garage_Build_Guide.md) | 부품 발주→외주→**차고에서 손으로** 드론+포렌식기기 제작·검증 |
-| [BOM (Excel)](bom/TaloNet_BOM.xlsx) | 발주용 부품 리스트 .xlsx (MAKE/BUY/OUTSOURCE + 원가 롤업, `tools/generate_bom.py`) |
+| [BOM (Excel)](bom/TaloNet_BOM.xlsx) · [BOM (PDF)](bom/TaloNet_BOM.pdf) | 발주용 부품 리스트 (MAKE/BUY/OUTSOURCE + 원가 롤업, `tools/generate_bom.py`) |
 | [CAD/SCAD](cad/README.md) | 파라메트릭 기체 모델 + 포렌식 기기 (`cad/*.scad`) |
 
 ## 🛡️ 방어 코드 (`defense/`)
 
-우리는 **공격은 안 한다.** 적 드론을 해킹/스푸핑/재밍하지 않는다. 대신 **그물매 모선드론 자신**이 당하지 않도록 방어한다. `defense/` 패키지는 전부 **검증된 공개 알고리즘/오픈소스 기반**(내 뇌피셜 아님):
+우리는 **공격은 안 한다.** 적 드론을 해킹/스푸핑/재밍하지 않는다. 대신 **Peregrine 모선드론 자신**이 당하지 않도록 방어한다. `defense/` 패키지는 전부 **검증된 공개 알고리즘/오픈소스 기반**(내 뇌피셜 아님):
 
 - **GNSS 인증 (anti-spoof):** Galileo OSNMA / TESLA — `defense/gnss/osnma_adapter.py`
 - **RAIM (무결성 감시 + 고장위성 배제):** `defense/gnss/raim.py`

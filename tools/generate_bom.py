@@ -2,7 +2,7 @@
 """Generate the TaloNet procurement BOM as a professional multi-sheet .xlsx.
 
 Reproducible: edit the data tables below and re-run to regenerate
-``bom/TaloNet_BOM.xlsx``. Covers the net-interceptor drone ("그물매") and the
+``bom/TaloNet_BOM.xlsx``. Covers the net-interceptor drone ("Peregrine") and the
 ForensIQ-1 forensic appliance, with MAKE / BUY / OUTSOURCE disposition, indicative
 USD pricing, vendors, and a formula-driven cost roll-up. Part numbers trace to
 docs/01 (drone spec), docs/06 (circuit BOM), docs/09 (appliance), and
@@ -18,6 +18,16 @@ import os
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.properties import PageSetupProperties
+
+
+def page_setup(ws, landscape=True):
+    """Landscape, fit-to-width-1 page so a PDF export paginates cleanly."""
+    ws.page_setup.orientation = "landscape" if landscape else "portrait"
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    ws.print_options.horizontalCentered = True
 
 KHAKI = "86855F"
 DARK = "23241C"
@@ -39,11 +49,11 @@ DISP_FILL = {"MAKE": GREEN, "BUY": BLUE, "OUTSOURCE": AMBER, "TOOL": GREY}
 # DATA  (id, category, item, mpn, qty, unit, disp, unit_usd, vendor, ref, notes)
 # ---------------------------------------------------------------------------
 DRONE_FRAME = [
-    ("DR-AF-001", "Frame", "Hex carbon deck plate, 360 mm AF, 3 mm (top/bottom)", "TaloNet GM-DECK (CNC)", 2, "ea", "OUTSOURCE", 130, "Local CNC shop", "cad", "From talonet_frame.scad; CF/G10, waterjet/CNC"),
+    ("DR-AF-001", "Frame", "Hex carbon deck plate, 360 mm AF, 3 mm (top/bottom)", "TaloNet PG-DECK (CNC)", 2, "ea", "OUTSOURCE", 130, "Local CNC shop", "cad", "From talonet_frame.scad; CF/G10, waterjet/CNC"),
     ("DR-AF-002", "Frame", "Carbon arm tube 30x26 mm, 420 mm", "Rock West 30x26", 4, "ea", "BUY", 22, "Rock West Composites", "cad", "Roll-wrapped CF; X8 = 4 arms"),
-    ("DR-AF-003", "Frame", "Arm clamp + coaxial motor mount (alu 6061)", "TaloNet GM-MNT (CNC)", 4, "ea", "OUTSOURCE", 38, "Local CNC shop", "cad", "Holds 2 coaxial motors/arm"),
+    ("DR-AF-003", "Frame", "Arm clamp + coaxial motor mount (alu 6061)", "TaloNet PG-MNT (CNC)", 4, "ea", "OUTSOURCE", 38, "Local CNC shop", "cad", "Holds 2 coaxial motors/arm"),
     ("DR-AF-004", "Frame", "Standoff/spacer set, alu, deck stack", "M3 alu standoff kit", 1, "kit", "BUY", 18, "McMaster-Carr", "cad", "deck_gap 70 mm"),
-    ("DR-AF-005", "Landing", "Landing gear carbon arch tube 22 mm + alu feet", "TaloNet GM-GEAR", 2, "set", "OUTSOURCE", 45, "Local CNC shop", "cad", "gear_height 230 mm"),
+    ("DR-AF-005", "Landing", "Landing gear carbon arch tube 22 mm + alu feet", "TaloNet PG-GEAR", 2, "set", "OUTSOURCE", 45, "Local CNC shop", "cad", "gear_height 230 mm"),
     ("DR-PR-001", "Propulsion", "Brushless motor, 14 kg-class octo, ~KV120", "T-Motor MN801S KV120", 8, "ea", "BUY", 175, "T-Motor", "docs/01", "X8 coaxial; 8 motors total"),
     ("DR-PR-002", "Propulsion", "Folding CF prop ~28-30 in (CW/CCW pair)", "T-Motor NS28x9.2 CF", 8, "ea", "BUY", 46, "T-Motor", "cad", "prop_dia ~711 mm"),
     ("DR-PR-003", "Propulsion", "ESC 80 A 12S HV, DShot600 + telemetry", "T-Motor FLAME 80A 12S", 8, "ea", "BUY", 95, "T-Motor", "docs/06", "1 per motor"),
@@ -66,12 +76,12 @@ DRONE_AVIONICS = [
 DRONE_PAYLOAD = [
     ("DR-NP-001", "Net aim", "Digital servo 20 kg (AIM-PAN, SERVO9)", "Savox SB-2290SG", 1, "ea", "BUY", 80, "Savox", "payload_map", "gimbal pan -60..+60 deg"),
     ("DR-NP-002", "Net aim", "Digital servo 20 kg (AIM-TILT, SERVO10)", "Savox SB-2290SG", 1, "ea", "BUY", 80, "Savox", "payload_map", "gimbal tilt 0..75 deg"),
-    ("DR-NP-003", "Net aim", "Pan/tilt gimbal yoke + bearing (printed/CNC)", "TaloNet GM-GIMBAL", 1, "set", "MAKE", 35, "Garage 3D print", "cad", "net_launcher(); PETG-CF/alu"),
+    ("DR-NP-003", "Net aim", "Pan/tilt gimbal yoke + bearing (printed/CNC)", "TaloNet PG-GIMBAL", 1, "set", "MAKE", 35, "Garage 3D print", "cad", "net_launcher(); PETG-CF/alu"),
     ("DR-NP-004", "Net aim", "Servo UBEC 6 V / 5 A", "Castle 10A BEC Pro", 1, "ea", "BUY", 22, "Castle Creations", "docs/06", "servo bus, isolated"),
     ("DR-NP-005", "Cinch", "Brushed gearmotor 12 V (mouth cinch)", "Pololu 25D HP 12V", 1, "ea", "BUY", 40, "Pololu", "docs/06", "drawstring spool; SERVO11 driver"),
     ("DR-NP-006", "Cinch", "Motor driver H-bridge w/ current sense", "Pololu G2 24v13", 1, "ea", "BUY", 30, "Pololu", "docs/06", "cinch drive"),
     ("DR-NP-007", "Cinch", "Current sensor breakout", "INA226 module", 1, "ea", "BUY", 8, "Pololu/Adafruit", "docs/06", "tension/stall threshold"),
-    ("DR-NP-008", "Cinch", "Drawstring spool + flanges (printed/turned)", "TaloNet GM-SPOOL", 1, "ea", "MAKE", 12, "Garage 3D print", "cad", "cinch_mechanism()"),
+    ("DR-NP-008", "Cinch", "Drawstring spool + flanges (printed/turned)", "TaloNet PG-SPOOL", 1, "ea", "MAKE", 12, "Garage 3D print", "cad", "cinch_mechanism()"),
     ("DR-NP-009", "Winch", "Brushed gearmotor 12 V (hoist winch)", "Pololu 37D 12V", 1, "ea", "BUY", 40, "Pololu", "docs/06", "vertical recovery"),
     ("DR-NP-010", "Winch", "Motor driver H-bridge 21 A", "Pololu G2 24v21", 1, "ea", "BUY", 40, "Pololu", "docs/06", "winch drive"),
     ("DR-NP-011", "Winch", "Load cell 5 kg + HX711 ADC", "TAL220 + HX711", 1, "set", "BUY", 11, "SparkFun", "docs/06", "winch tension feedback"),
@@ -81,8 +91,8 @@ DRONE_PAYLOAD = [
     ("DR-NP-015", "Release", "Quick-release servo (drop/abort)", "Savox SB-2290SG", 1, "ea", "BUY", 80, "Savox", "payload_map", "SERVO12 release"),
     ("DR-NP-016", "Net", "Capture net, knotless Dyneema/Kevlar, ~3.5 m mouth", "Custom cast net", 1, "ea", "MAKE", 60, "Garage / net maker", "cad", "capture_net(); launched casting net"),
     ("DR-NP-017", "Net", "Drawstring (Dyneema 2 mm) + perimeter weights", "Dyneema + brass weights", 1, "set", "MAKE", 18, "Garage", "cad", "purse loop + rim weights"),
-    ("DR-NP-018", "Net", "Muzzle nozzle + bay housing (printed)", "TaloNet GM-MUZZLE", 1, "set", "MAKE", 20, "Garage 3D print", "cad", "netlauncher_bay()"),
-    ("DR-NP-019", "Payload IF", "Payload interface PCB (STM32G474) fab + assembly", "TaloNet GM-PAYIF rev A", 1, "ea", "OUTSOURCE", 65, "JLCPCB/PCBWay", "docs/06 §10", "interlock + driver carrier"),
+    ("DR-NP-018", "Net", "Muzzle nozzle + bay housing (printed)", "TaloNet PG-MUZZLE", 1, "set", "MAKE", 20, "Garage 3D print", "cad", "netlauncher_bay()"),
+    ("DR-NP-019", "Payload IF", "Payload interface PCB (STM32G474) fab + assembly", "TaloNet PG-PAYIF rev A", 1, "ea", "OUTSOURCE", 65, "JLCPCB/PCBWay", "docs/06 §10", "interlock + driver carrier"),
 ]
 
 APPLIANCE = [
@@ -115,7 +125,7 @@ CONSUMABLES = [
 
 OUTSOURCED = [
     ("OS-CN-001", "CNC", "CNC/waterjet carbon decks (2x) + alu mounts", "per cad STEP/STL", 1, "job", "OUTSOURCE", 0, "Local CNC / SendCutSend", "cad", "covered in DR-AF lines; quote per drawing"),
-    ("OS-PC-001", "PCB", "Payload IF PCB fab + SMT assembly (STM32G474)", "TaloNet GM-PAYIF rev A", 1, "job", "OUTSOURCE", 0, "JLCPCB / PCBWay", "docs/06 §10", "covered in DR-NP-019; provide gerbers+BOM+CPL"),
+    ("OS-PC-001", "PCB", "Payload IF PCB fab + SMT assembly (STM32G474)", "TaloNet PG-PAYIF rev A", 1, "job", "OUTSOURCE", 0, "JLCPCB / PCBWay", "docs/06 §10", "covered in DR-NP-019; provide gerbers+BOM+CPL"),
     ("OS-AN-001", "Anodize", "Anodize/powder-coat alu parts (khaki #86855F)", "finish service", 1, "job", "OUTSOURCE", 60, "Local finisher", "cad", "signature khaki"),
 ]
 
@@ -155,6 +165,8 @@ def style_header(ws):
 def write_sheet(wb, title, rows):
     ws = wb.create_sheet(title[:31])
     style_header(ws)
+    page_setup(ws)
+    ws.print_title_rows = "1:1"
     r = 2
     for (pid, cat, item, mpn, qty, unit, disp, price, vendor, ref, notes) in rows:
         vals = [pid, cat, item, mpn, qty, unit, disp, price, None, vendor, ref, notes]
@@ -185,6 +197,7 @@ def write_sheet(wb, title, rows):
 
 def cover_sheet(wb):
     ws = wb.create_sheet("Cover", 0)
+    page_setup(ws, landscape=False)
     ws.sheet_view.showGridLines = False
     ws.column_dimensions["A"].width = 2
     ws.column_dimensions["B"].width = 90
@@ -193,7 +206,7 @@ def cover_sheet(wb):
         c.font = Font(size=size, bold=bold, color=color)
         c.alignment = Alignment(wrap_text=True, vertical="top")
     line(2, "TaloNet — Bill of Materials & Procurement Package", 18, True, KHAKI)
-    line(3, "그물매 net-interceptor drone + ForensIQ-1 forensic appliance")
+    line(3, "Peregrine net-interceptor drone + ForensIQ-1 forensic appliance")
     line(5, "HOW TO USE", 12, True)
     line(6, "One sheet per subsystem. Disp = MAKE (garage) / BUY (off-the-shelf) / "
             "OUTSOURCE (CNC/PCB/finish) / TOOL (one-time shop). Ext USD = Qty x Unit "
@@ -223,6 +236,7 @@ def cover_sheet(wb):
 
 def rollup_sheet(wb, totals):
     ws = wb.create_sheet("Cost Roll-up")
+    page_setup(ws, landscape=False)
     ws.column_dimensions["A"].width = 40
     ws.column_dimensions["B"].width = 16
     hdr = ["Subsystem", "Subtotal USD"]
@@ -254,6 +268,142 @@ def rollup_sheet(wb, totals):
     gt.fill = PatternFill("solid", fgColor=KHAKI)
 
 
+_RGB = {"86855F": (134, 133, 95), "MAKE": (221, 234, 208), "BUY": (214, 228, 240),
+        "OUTSOURCE": (246, 230, 196), "TOOL": (236, 236, 232)}
+# PDF columns (landscape A4, ~277 mm usable): label, width
+PDF_COLS = [("ID", 20), ("Item / Description", 73), ("Mfr / Part No.", 40),
+            ("Qty", 9), ("Disp", 22), ("Unit$", 17), ("Ext$", 19),
+            ("Vendor", 35), ("Notes", 42)]
+
+
+def _ascii(s):
+    s = (str(s).replace("—", "-").replace("–", "-").replace("×", "x")
+         .replace("→", "->").replace("·", "-").replace("’", "'").replace("§", "S"))
+    return s.encode("latin-1", "replace").decode("latin-1")
+
+
+def write_pdf(out):
+    from fpdf import FPDF
+
+    pdf = FPDF(orientation="L", unit="mm", format="A4")
+    pdf.set_auto_page_break(True, margin=12)
+    pdf.set_margins(10, 10, 10)
+
+    def fit(text, w):
+        t = _ascii(text)
+        if pdf.get_string_width(t) <= w - 1.5:
+            return t
+        while t and pdf.get_string_width(t + "...") > w - 1.5:
+            t = t[:-1]
+        return t + "..."
+
+    def khaki(fill=True):
+        pdf.set_fill_color(*_RGB["86855F"])
+        if fill:
+            pdf.set_text_color(255, 255, 255)
+
+    # --- cover ---
+    pdf.add_page()
+    khaki()
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.cell(0, 12, "TaloNet - Bill of Materials & Procurement", new_x="LMARGIN", new_y="NEXT", fill=True)
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(3)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.multi_cell(0, 6, _ascii(
+        "Peregrine net-interceptor drone + ForensIQ-1 forensic appliance.\n"
+        "One section per subsystem; Ext = Qty x Unit; each section subtotals; the "
+        "Cost Roll-up sums everything with a 15% contingency. Prices are INDICATIVE "
+        "USD - confirm with the vendor before ordering. Build/assembly: "
+        "docs/12_Garage_Build_Guide.md. Source: tools/generate_bom.py."))
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 7, "Disposition legend", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 10)
+    for k, txt in [("MAKE", "fabricate/assemble in the garage"),
+                   ("BUY", "purchase off-the-shelf"),
+                   ("OUTSOURCE", "send a drawing/gerber out (CNC, PCB, finish)"),
+                   ("TOOL", "one-time shop equipment")]:
+        pdf.set_fill_color(*_RGB[k])
+        pdf.cell(26, 6, k, border=1, align="C", fill=True)
+        pdf.cell(0, 6, "  " + txt, new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(176, 40, 40)
+    pdf.multi_cell(0, 5, _ascii(
+        "SAFETY/LEGAL: high-energy LiPo, pressurized CO2 and a kinetic net launcher "
+        "are no joke - see docs/12 safety. Authorized operators only; intelligence + "
+        "human-in-the-loop trigger, never an autonomous weapon."))
+    pdf.set_text_color(0, 0, 0)
+
+    grand = 0.0
+    rollup = []
+    for title, rows in SECTIONS:
+        pdf.add_page()
+        khaki()
+        pdf.set_font("Helvetica", "B", 13)
+        pdf.cell(0, 9, _ascii(title), new_x="LMARGIN", new_y="NEXT", fill=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(1)
+        khaki()
+        pdf.set_font("Helvetica", "B", 8)
+        for label, w in PDF_COLS:
+            pdf.cell(w, 7, label, border=1, align="C", fill=True)
+        pdf.ln()
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Helvetica", "", 7)
+        sub = 0.0
+        for (pid, cat, item, mpn, qty, unit, disp, price, vendor, ref, notes) in rows:
+            ext = qty * price
+            sub += ext
+            cells = [(pid, "L", None), (item, "L", None), (mpn, "L", None),
+                     (str(qty), "C", None), (disp, "C", _RGB.get(disp)),
+                     (f"${price:,.0f}", "R", None), (f"${ext:,.0f}", "R", None),
+                     (vendor, "L", None), (notes, "L", None)]
+            for (text, align, fill), (_, w) in zip(cells, PDF_COLS):
+                if fill:
+                    pdf.set_fill_color(*fill)
+                pdf.cell(w, 5.2, fit(text, w), border=1, align=align, fill=bool(fill))
+            pdf.ln()
+        pdf.set_font("Helvetica", "B", 8)
+        wsum = sum(w for _, w in PDF_COLS[:6])
+        pdf.cell(wsum, 6, "SUBTOTAL", border=1, align="R")
+        khaki()
+        pdf.cell(PDF_COLS[6][1], 6, f"${sub:,.0f}", border=1, align="R", fill=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln()
+        rollup.append((title, sub))
+        grand += sub
+
+    # roll-up
+    pdf.add_page()
+    khaki()
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "Cost Roll-up", new_x="LMARGIN", new_y="NEXT", fill=True)
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "", 11)
+    for title, sub in rollup:
+        pdf.cell(180, 7, _ascii(title), border=1)
+        pdf.cell(40, 7, f"${sub:,.0f}", border=1, align="R")
+        pdf.ln()
+    cont = grand * 0.15
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(180, 7, "Materials subtotal (incl. tools)", border=1)
+    pdf.cell(40, 7, f"${grand:,.0f}", border=1, align="R")
+    pdf.ln()
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(180, 7, "Contingency 15%", border=1)
+    pdf.cell(40, 7, f"${cont:,.0f}", border=1, align="R")
+    pdf.ln()
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.cell(180, 9, "GRAND TOTAL (indicative)", border=1)
+    khaki()
+    pdf.cell(40, 9, f"${grand + cont:,.0f}", border=1, align="R", fill=True)
+
+    pdf.output(out)
+
+
 def main():
     wb = Workbook()
     wb.remove(wb.active)
@@ -269,6 +419,12 @@ def main():
     wb.save(out)
     n = sum(len(rows) for _, rows in SECTIONS)
     print(f"wrote {out}  ({len(SECTIONS)} sheets, {n} line items)")
+    try:
+        pdf_out = os.path.normpath(os.path.join(out_dir, "TaloNet_BOM.pdf"))
+        write_pdf(pdf_out)
+        print(f"wrote {pdf_out}")
+    except ImportError:
+        print("(fpdf2 not installed; skipped PDF — pip install fpdf2)")
 
 
 if __name__ == "__main__":
