@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TaloNet — Technical documentation</title>
+  <meta name="description" content="How TaloNet works: a counter-UAS mothership that nets a hostile drone in flight and recovers it intact — the engagement, the operator cockpit, the navigation defenses, and the forensic exploitation of the captured aircraft." />
+  <meta name="theme-color" content="#000000" />
+  <meta name="robots" content="index,follow" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23000000'/%3E%3Cg fill='none' stroke='%23e9eaea' stroke-width='1.5'%3E%3Cpath d='M4 5h16M4 12h16M4 19h16M9 5v14M15 5v14'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+  <header class="bar">
+    <a class="brand" href="index.html">TALONET</a>
+    <a class="back" href="index.html">&#8592; Back to site</a>
+  </header>
+
+  <main class="wrap">
+    <p class="eyebrow">Technical documentation</p>
+    <h1>How TaloNet actually works</h1>
+    <p class="subtitle">A counter-UAS mothership that nets a hostile drone in flight and recovers it intact — no hacking, no jamming, no spoofing. This page explains the system end to end.</p>
+
+    <ul class="toc">
+      <li><a href="#concept">1 — Capture over kill</a></li>
+      <li><a href="#platform">2 — The interceptor</a></li>
+      <li><a href="#engagement">3 — The engagement</a></li>
+      <li><a href="#cockpit">4 — The operator cockpit</a></li>
+      <li><a href="#payload">5 — The net &amp; how it is aimed</a></li>
+      <li><a href="#defense">6 — Defending the interceptor</a></li>
+      <li><a href="#forensics">7 — Reading the captured drone</a></li>
+      <li><a href="#engineering">8 — Engineering &amp; validation</a></li>
+    </ul>
+
+    <!-- 1 -->
+    <h2 id="concept">1 — Capture over kill</h2>
+    <p>Every other answer to a hostile drone ends in a fireball or a jammed band, and both throw away the most valuable thing in the sky: the drone itself. Shooting it down scatters debris over whatever is below and destroys the evidence of who sent it. Jamming or spoofing the radio spectrum is legally fraught and takes down friendly communications along with the target.</p>
+    <p>TaloNet takes the opposite approach. A larger mothership drone patrols the airspace; an operator identifies a hostile UAS and authorizes the intercept; a launcher places a net over it and draws it closed. The catch is then either flown home <strong>intact</strong> — a reusable airframe and a complete, unaltered record of where it launched and what it saw — or, if it is judged too dangerous to recover (a one-way attack drone, for example), carried clear of people and dropped safely.</p>
+    <p>The ethical line is built into the system, not just asserted in the brochure:</p>
+    <ul>
+      <li><strong>Nothing transmits against the target.</strong> The capture is purely mechanical. There is no code anywhere in the system that jams, spoofs, or talks to a hostile drone.</li>
+      <li><strong>The defensive software protects us, not the enemy.</strong> It only detects and rejects attacks aimed at our own interceptor — GNSS spoofing and jamming, and forged or replayed commands.</li>
+      <li><strong>Exploitation produces intelligence, never a fire order.</strong> Reading a captured drone tells a commander where the threat came from. The decision to act on that stays with a human, under the rules of engagement and the Law of Armed Conflict — distinction, proportionality, precautions; never civilians.</li>
+    </ul>
+    <p class="note">An onboard machine-vision autonomy loop was considered and deliberately dropped. A human reacts faster than a multi-second inference, and the decision to engage belongs to the operator — so the system is flown manually rather than handing the trigger to a model.</p>
+
+    <!-- 2 -->
+    <h2 id="platform">2 — The interceptor (&ldquo;Geulmae&rdquo;)</h2>
+    <p>The mothership is a coaxial X8 octocopter — four arms, each carrying two motors stacked top and bottom — sized to carry a net launcher, a captured drone, and a full sensor suite while still keeping enough thrust in reserve to chase a fast target and snatch it out of the air. The coaxial layout also means it can stay airborne and controllable if a single motor fails.</p>
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Configuration</td><td>X8 coaxial octocopter (4 arms &times; 2 motors)</td></tr>
+        <tr><td>Wheelbase (motor to motor)</td><td>1,150 mm</td></tr>
+        <tr><td>Empty weight</td><td>6.8 kg</td></tr>
+        <tr><td>Max takeoff weight</td><td>14 kg</td></tr>
+        <tr><td>Mission payload</td><td>~5 kg (launcher, net, and the captured drone)</td></tr>
+        <tr><td>Thrust margin</td><td>~2.3 : 1 — enough to fly loaded and still catch up</td></tr>
+        <tr><td>Dash speed</td><td>120 km/h</td></tr>
+        <tr><td>Endurance (capture)</td><td>~25 min</td></tr>
+        <tr><td>Operating radius</td><td>8 km</td></tr>
+        <tr><td>Hold precision</td><td>&#177;0.1 m (RTK GPS)</td></tr>
+        <tr><td>Engagement</td><td>physical capture, human-authorized</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 3 -->
+    <h2 id="engagement">3 — The engagement</h2>
+    <p>Onboard electro-optical and infrared sensors hold the track and feed a stabilized picture to the operator. A human classifies the contact and authorizes the intercept — no part of the engagement is automatic. The launcher is then aimed under software control and fired; the net flies out, spreads, and drops over the target. A drawstring around the mouth of the net is cinched shut so the catch cannot work its way free, and the interceptor carries it in the net itself — there is no separate cage to deploy.</p>
+    <p>From there the catch is either flown back to base for recovery and analysis, or, if it is judged a recovery hazard, released over open ground away from people. Every armed action — firing, cinching, releasing — is locked behind an explicit armed state, and an emergency stop latches the whole payload so nothing can fire while it is engaged.</p>
+
+    <!-- 4 -->
+    <h2 id="cockpit">4 — The operator cockpit</h2>
+    <p>The interceptor is flown from a ground-control application that runs on a laptop. A realistic EO/IR first-person view fills the screen beneath a military heads-up display: a boresight and pitch ladder, a bank arc, heading, speed and altitude tapes, a box framing the hostile UAS, and a green reticle showing exactly where the net is currently aimed. The same operator flies the aircraft and aims and fires the net, all from the keyboard.</p>
+    <p>The flight controls cover pitch, roll, yaw and throttle; a second cluster slews the net aim in pan and tilt; and dedicated keys fire the net, cinch it shut, release the catch, toggle the armed state, trigger an emergency stop, reset, and command return-to-home.</p>
+    <table>
+      <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>W / S &middot; A / D</td><td>pitch / roll</td></tr>
+        <tr><td>Q / E</td><td>yaw</td></tr>
+        <tr><td>R / F</td><td>throttle up / down</td></tr>
+        <tr><td>I / K &middot; J / L</td><td>net aim tilt / pan (slews the reticle)</td></tr>
+        <tr><td>Space</td><td>fire net (armed only, in the aimed direction)</td></tr>
+        <tr><td>C / V</td><td>cinch shut / release the catch</td></tr>
+        <tr><td>G &middot; B &middot; H</td><td>arm toggle &middot; emergency stop &middot; return-to-home</td></tr>
+        <tr><td>N &middot; Esc</td><td>reset &middot; quit</td></tr>
+      </tbody>
+    </table>
+    <p>The cockpit is not a mock-up. It speaks the same MAVLink command and telemetry protocol used by real flight controllers, so the exact same software drives a desktop vehicle emulator, an ArduPilot software-in-the-loop simulation, or a real Pixhawk flight controller over a serial link — only the connection target changes. Net aim is sent as real servo commands, arming, firing and return-to-home are real flight-controller commands, and the heads-up display is driven by live attitude, speed, GPS and battery telemetry coming back from the vehicle.</p>
+
+    <!-- 5 -->
+    <h2 id="payload">5 — The net &amp; how it is aimed</h2>
+    <p>The net is not simply dropped — it is launched from a pan/tilt gimbal so the operator can place it on a target that is off to the side or above. The whole launcher swings to the aimed direction, the net is cast out and spreads as it flies, and the mouth is then drawn shut by a drawstring spool that is a separate mechanism from the winch used to raise and lower the catch.</p>
+    <p>The aim and payload limits are a single shared definition, so the gimbal range in the physical model, the travel the operator can command in the cockpit, and the wiring on the flight controller all refer to the same numbers. Changing a limit in one place changes all three.</p>
+    <table>
+      <thead><tr><th>Actuator</th><th>Travel</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Net aim — pan</td><td>&#8722;60&deg; &hellip; +60&deg;</td><td>swings the launcher left / right</td></tr>
+        <tr><td>Net aim — tilt</td><td>0&deg; &hellip; 75&deg;</td><td>raises / lowers the aim</td></tr>
+        <tr><td>Cinch</td><td>0 &hellip; 100 %</td><td>purses the mouth of the net shut</td></tr>
+        <tr><td>Release</td><td>quick-release</td><td>drops the catch on command</td></tr>
+        <tr><td>Fire</td><td>trigger</td><td>net launcher (CO&#8322; / igniter), armed only</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 6 -->
+    <h2 id="defense">6 — Defending the interceptor</h2>
+    <p>While TaloNet never attacks anyone's signals, its own navigation and command links are obvious targets, so the interceptor hardens itself. None of this transmits, jams, or spoofs anything — it only detects attacks and refuses to act on bad data. Each layer implements a published, verified algorithm or relies on an audited open-source implementation rather than home-grown cryptography, and the detection logic is light enough to run on the flight computer itself.</p>
+    <ul>
+      <li><strong>Authenticated satellite navigation.</strong> Galileo's navigation-message authentication (a one-way key chain with a delayed message authentication code) lets the receiver verify that the GNSS signals it is using are genuine. This is the only layer that can catch a spoof that is otherwise perfectly self-consistent.</li>
+      <li><strong>Integrity monitoring.</strong> Receiver-autonomous integrity monitoring checks the satellite measurements against each other and statistically detects and excludes a faulty or hostile satellite before it can corrupt the position fix.</li>
+      <li><strong>Consistency checks.</strong> A set of sensor cross-checks catch spoofing and jamming that has not yet been authenticated away — sudden position jumps, navigation-filter disagreement, abnormal signal strength, clock jumps, and disagreement between satellite constellations.</li>
+      <li><strong>Authenticated command link.</strong> Every command carries a cryptographic signature and a monotonic timestamp, so forged or replayed commands are rejected. The link layer adds a sliding-window anti-replay check and watches for jamming or takeover.</li>
+    </ul>
+    <p>These layers feed a single monitor that produces one plain-language verdict every cycle, and the flight stack acts on it. The logic is deliberately fail-safe toward inertial navigation — it never silently trusts a suspect fix:</p>
+    <table>
+      <thead><tr><th>Verdict</th><th>What the interceptor does</th><th>When</th></tr></thead>
+      <tbody>
+        <tr><td>Trust GNSS</td><td>Use the satellite fix normally</td><td>no spoof flag, integrity healthy, command link trusted</td></tr>
+        <tr><td>GNSS degraded</td><td>Use the fix cautiously, with less confidence</td><td>a spoof is suspected but navigation is cryptographically authenticated, or authentication is simply absent</td></tr>
+        <tr><td>Dead-reckon</td><td>Coast on inertial sensors, ignore GNSS position</td><td>an unauthenticated spoof, an unresolved integrity fault, or jamming</td></tr>
+        <tr><td>Return to home</td><td>Last-resort failsafe</td><td>the trusted command link is lost while already dead-reckoning</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 7 -->
+    <h2 id="forensics">7 — Reading the captured drone</h2>
+    <p>The adversary struck first; TaloNet only defended, non-kinetically. Once a hostile drone has been captured and secured, its storage can be read to answer the question that matters for a proportionate, human-authorized response: <strong>where did this come from?</strong> This is exploitation of a device we already hold — nothing here boots, contacts, or interferes with anything. The output is intelligence for a commander, not a court submission and not an automatic counter-strike.</p>
+    <p>The work runs as a fixed, ordered procedure with the original evidence treated as untouchable:</p>
+    <table>
+      <thead><tr><th>Step</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td>1 — Intake</td><td>The item is logged into a tamper-evident custody record.</td></tr>
+        <tr><td>2 — Imaging</td><td>A read-only, write-blocked copy of the storage is taken; the original is never written to.</td></tr>
+        <tr><td>3 — Integrity check</td><td>The copy's cryptographic hash must match the original. If it does not, the run stops and no report is produced.</td></tr>
+        <tr><td>4 — Content</td><td>The image is inventoried and searched for flight logs and other relevant files.</td></tr>
+        <tr><td>5 — Flight logs</td><td>Each recovered log is parsed by a verified open-source parser for that format.</td></tr>
+        <tr><td>6 — Trajectory</td><td>The track is reconstructed and the launch point and likely target are estimated, with a map.</td></tr>
+        <tr><td>7 — Report</td><td>A threat-intelligence report is assembled together with the full custody record.</td></tr>
+      </tbody>
+    </table>
+    <p>The parsers are not guesswork. Each flight-log format — ArduPilot, PX4, NMEA, DJI — is read by an established, audited open-source tool, and the storage is imaged with standard forensic imaging tooling. From the reconstructed track the system pulls far more than a single coordinate: the hostile launch point with an uncertainty radius, the operating-radius range ring that hints at the enemy base, repeated departure points across multiple sorties, the planned waypoints (which point at the next intended target), firmware and board attribution, geofence and radio parameters, and geotagged reconnaissance imagery — all on a timeline.</p>
+    <p>Every estimate carries a confidence and the evidence it rests on; nothing is asserted as certainty, and the launch point is meant to be cross-checked by independent means. The custody log is append-only and hash-chained, so any tampering is evident and a commander can trust the provenance of what they are reading.</p>
+    <p>In the field this is packaged as a sealed appliance, ForensIQ-1: insert the captured drone's memory card into a write-block slot and the whole procedure runs end to end, printing a threat-intelligence report on a built-in thermal printer and archiving the full report to an evidence drive.</p>
+
+    <!-- 8 -->
+    <h2 id="engineering">8 — Engineering &amp; validation</h2>
+    <p>The airframe and the forensic appliance are both modeled parametrically, so dimensions are driven by a small set of named parameters rather than hand-drawn — change the wheelbase, the propeller size, or the net dimensions and the model rebuilds itself, and the net-aim angles in the model are the same ones the cockpit and wiring use. Both models pass a watertight (manifold) geometry check, so they export cleanly for manufacturing or further CAD work.</p>
+    <p>The software is covered by an automated test suite that runs in continuous integration on every change: it is linted and then exercised on Python 3.12. The tests cover the navigation-defense layers (authentication, integrity monitoring, spoof and jamming detection, command signing and the fused verdict), the cockpit's control core and command link, and the forensic core — the custody chain, the trajectory math, and the log parsers. The core logic is written to run without any third-party packages, so most of the suite runs with nothing installed.</p>
+
+    <div class="foot">
+      TaloNet — counter-UAS interception &amp; recovery &middot; engagement decisions remain with authorized operators under applicable rules of engagement and international humanitarian law.
+    </div>
+  </main>
+
+</body>
+</html>
