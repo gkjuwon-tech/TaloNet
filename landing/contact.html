@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TaloNet — Request a briefing</title>
+  <meta name="description" content="Request a briefing on TaloNet — counter-UAS interception & exploitation. Capabilities, integration, and evaluation options for qualified, authorized operators." />
+  <meta name="theme-color" content="#000000" />
+  <meta name="robots" content="index,follow" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23000000'/%3E%3Cg fill='none' stroke='%23e9eaea' stroke-width='1.5'%3E%3Cpath d='M4 5h16M4 12h16M4 19h16M9 5v14M15 5v14'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+  <header class="bar">
+    <a class="brand" href="index.html">TALONET</a>
+    <a class="back" href="index.html">&#8592; Back to site</a>
+  </header>
+
+  <main class="wrap">
+    <p class="eyebrow">Get in touch</p>
+    <h1>Request a briefing.</h1>
+    <p class="subtitle">Walk through the system with our team — capabilities, integration, and evaluation options for your airspace. Tell us about your requirement and we will follow up.</p>
+
+    <form class="form" id="briefForm" novalidate>
+      <div class="form__grid">
+        <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" type="text" autocomplete="name" required /></div>
+        <div class="field"><label for="f-org">Organization</label><input id="f-org" name="org" type="text" autocomplete="organization" required /></div>
+      </div>
+      <div class="form__grid">
+        <div class="field"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" autocomplete="email" required /></div>
+        <div class="field"><label for="f-country">Country / jurisdiction</label><input id="f-country" name="country" type="text" autocomplete="country-name" /></div>
+      </div>
+      <div class="field"><label for="f-msg">Requirement</label><textarea id="f-msg" name="message" rows="4"></textarea></div>
+      <button class="btn btn--solid" type="submit">Send request &#8599;</button>
+      <p class="form__note">For evaluation and procurement enquiries from qualified, authorized organizations only. By submitting you agree to our <a class="link" href="terms.html">Terms</a> and <a class="link" href="privacy.html">Privacy Policy</a>.</p>
+      <div class="form__ok" id="formOk">Request received. Our team will be in touch at the address you provided.</div>
+    </form>
+
+    <h2>Direct channels</h2>
+    <table>
+      <tbody>
+        <tr><td>Briefings &amp; evaluation</td><td><a class="link" href="mailto:briefings@talonet.example">briefings@talonet.example</a></td></tr>
+        <tr><td>Procurement &amp; integration</td><td><a class="link" href="mailto:procurement@talonet.example">procurement@talonet.example</a></td></tr>
+        <tr><td>Security disclosure</td><td><a class="link" href="mailto:security@talonet.example">security@talonet.example</a></td></tr>
+        <tr><td>Press</td><td><a class="link" href="mailto:press@talonet.example">press@talonet.example</a></td></tr>
+      </tbody>
+    </table>
+    <p class="note">TaloNet engages with government, defense and qualified security organizations. Enquiries may be subject to eligibility, jurisdiction and export-control screening before we respond in detail.</p>
+
+    <div class="foot">
+      TaloNet — counter-UAS interception &amp; exploitation &middot; <a class="link" href="index.html">Home</a> &middot; <a class="link" href="mission.html">Mission</a> &middot; <a class="link" href="docs.html">Docs</a> &middot; <a class="link" href="terms.html">Terms</a> &middot; <a class="link" href="privacy.html">Privacy</a>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

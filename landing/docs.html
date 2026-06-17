@@ -21,7 +21,7 @@
   <main class="wrap">
     <p class="eyebrow">Technical documentation</p>
     <h1>How TaloNet actually works</h1>
-    <p class="subtitle">A counter-UAS mothership that nets a hostile drone in flight and recovers it intact — no hacking, no jamming, no spoofing. This page explains the system end to end.</p>
+    <p class="subtitle">A counter-UAS mothership that nets a hostile drone in flight and recovers it intact, then strips its memory to the launch point. This page explains the system end to end.</p>
 
     <ul class="toc">
       <li><a href="#concept">1 — Capture over kill</a></li>
@@ -36,18 +36,17 @@
 
     <!-- 1 -->
     <h2 id="concept">1 — Capture over kill</h2>
-    <p>Every other answer to a hostile drone ends in a fireball or a jammed band, and both throw away the most valuable thing in the sky: the drone itself. Shooting it down scatters debris over whatever is below and destroys the evidence of who sent it. Jamming or spoofing the radio spectrum is legally fraught and takes down friendly communications along with the target.</p>
-    <p>TaloNet takes the opposite approach. A larger mothership drone patrols the airspace; an operator identifies a hostile UAS and authorizes the intercept; a launcher places a net over it and draws it closed. The catch is then either flown home <strong>intact</strong> — a reusable airframe and a complete, unaltered record of where it launched and what it saw — or, if it is judged too dangerous to recover (a one-way attack drone, for example), carried clear of people and dropped safely.</p>
-    <p>The ethical line is built into the system, not just asserted in the brochure:</p>
+    <p>Every other answer to a hostile drone ends in a fireball or a jammed band, and both throw away the most valuable thing in the sky: the drone itself. Shooting it down scatters debris over whatever is below and destroys the evidence of who sent it. Jamming takes down your own datalinks along with the target's.</p>
+    <p>TaloNet takes the opposite approach. A larger mothership drone patrols the airspace; an operator identifies a hostile UAS and commits the intercept; a launcher places a net over it. What happens next depends on the target:</p>
     <ul>
-      <li><strong>Nothing transmits against the target.</strong> The capture is purely mechanical. There is no code anywhere in the system that jams, spoofs, or talks to a hostile drone.</li>
-      <li><strong>The defensive software protects us, not the enemy.</strong> It only detects and rejects attacks aimed at our own interceptor — GNSS spoofing and jamming, and forged or replayed commands.</li>
-      <li><strong>Exploitation produces intelligence, never a fire order.</strong> Reading a captured drone tells a commander where the threat came from. The decision to act on that stays with a human, under the rules of engagement and the Law of Armed Conflict — distinction, proportionality, precautions; never civilians.</li>
+      <li><strong>A reconnaissance drone is taken alive.</strong> The capture net is cinched shut and the catch is flown home <strong>intact</strong> — a reusable airframe and a complete, unaltered record of where it launched and what it saw, ready for exploitation.</li>
+      <li><strong>A kamikaze drone is neutralised at a distance.</strong> A second, larger stand-off net is fired from outside the blast radius to foul its rotors; its tether is then cut and the whole catch is dropped over open ground. The interceptor never closes to contact with a live warhead.</li>
     </ul>
-    <p class="note">An onboard machine-vision autonomy loop was considered and deliberately dropped. A human reacts faster than a multi-second inference, and the decision to engage belongs to the operator — so the system is flown manually rather than handing the trigger to a model.</p>
+    <p>One drone carries enough information to compromise the operation that launched it. TaloNet's job is to bring it back whole and read it.</p>
+    <p class="note">An onboard machine-vision autonomy loop was considered and deliberately dropped: a human reacts faster than a multi-second inference, so the interceptor is flown manually rather than handing the trigger to a model.</p>
 
     <!-- 2 -->
-    <h2 id="platform">2 — The interceptor (&ldquo;Geulmae&rdquo;)</h2>
+    <h2 id="platform">2 — The interceptor (&ldquo;Peregrine&rdquo;)</h2>
     <p>The mothership is a coaxial X8 octocopter — four arms, each carrying two motors stacked top and bottom — sized to carry a net launcher, a captured drone, and a full sensor suite while still keeping enough thrust in reserve to chase a fast target and snatch it out of the air. The coaxial layout also means it can stay airborne and controllable if a single motor fails.</p>
     <table>
       <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
@@ -62,19 +61,21 @@
         <tr><td>Endurance (capture)</td><td>~25 min</td></tr>
         <tr><td>Operating radius</td><td>8 km</td></tr>
         <tr><td>Hold precision</td><td>&#177;0.1 m (RTK GPS)</td></tr>
-        <tr><td>Engagement</td><td>physical capture, human-authorized</td></tr>
+        <tr><td>Nets</td><td>CRADLE capture + TRAWLER stand-off (one aiming turret)</td></tr>
       </tbody>
     </table>
 
     <!-- 3 -->
     <h2 id="engagement">3 — The engagement</h2>
-    <p>Onboard electro-optical and infrared sensors hold the track and feed a stabilized picture to the operator. A human classifies the contact and authorizes the intercept — no part of the engagement is automatic. The launcher is then aimed under software control and fired; the net flies out, spreads, and drops over the target. A drawstring around the mouth of the net is cinched shut so the catch cannot work its way free, and the interceptor carries it in the net itself — there is no separate cage to deploy.</p>
-    <p>From there the catch is either flown back to base for recovery and analysis, or, if it is judged a recovery hazard, released over open ground away from people. Every armed action — firing, cinching, releasing — is locked behind an explicit armed state, and an emergency stop latches the whole payload so nothing can fire while it is engaged.</p>
+    <p>Onboard electro-optical and infrared sensors hold the track and feed a stabilized picture to the operator, who classifies the contact and commits the intercept. The interceptor carries <strong>two nets on one aimed turret</strong>, and the operator picks which one to fire based on the target.</p>
+    <p><strong>CRADLE — the capture net (reconnaissance).</strong> The small self-cinching net is fired over the target, a drawstring purses its mouth shut so the catch cannot work free, and a winch raises it against the belly. The interceptor carries it home in the net itself — there is no separate cage — for recovery and exploitation.</p>
+    <p><strong>TRAWLER — the stand-off net (kamikaze).</strong> For a one-way attack drone the interceptor never closes to contact. A larger, denser net is fired from outside the blast radius to foul the target's rotors and stop it falling on anything that matters; once clear ground is confirmed, a cord-cutter severs the tether and the whole catch is jettisoned. No cinch, no winch, no approach.</p>
+    <p>Every armed action — firing either net, cinching, cord-cutting, releasing — is locked behind an explicit armed state, and an emergency stop latches the whole payload so nothing can fire while it is engaged.</p>
 
     <!-- 4 -->
     <h2 id="cockpit">4 — The operator cockpit</h2>
     <p>The interceptor is flown from a ground-control application that runs on a laptop. A realistic EO/IR first-person view fills the screen beneath a military heads-up display: a boresight and pitch ladder, a bank arc, heading, speed and altitude tapes, a box framing the hostile UAS, and a green reticle showing exactly where the net is currently aimed. The same operator flies the aircraft and aims and fires the net, all from the keyboard.</p>
-    <p>The flight controls cover pitch, roll, yaw and throttle; a second cluster slews the net aim in pan and tilt; and dedicated keys fire the net, cinch it shut, release the catch, toggle the armed state, trigger an emergency stop, reset, and command return-to-home.</p>
+    <p>The flight controls cover pitch, roll, yaw and throttle; a second cluster slews the net aim in pan and tilt; a mode key switches between the two nets; and dedicated keys fire the selected net, cinch it shut, cut the stand-off tether, release the catch, toggle the armed state, trigger an emergency stop, reset, and command return-to-home. The reticle changes colour and size with the selected net, and the wrong-mode key is refused — you cannot cinch a stand-off net or cut a recovery net's tether.</p>
     <table>
       <thead><tr><th>Keys</th><th>Action</th></tr></thead>
       <tbody>
@@ -82,32 +83,36 @@
         <tr><td>Q / E</td><td>yaw</td></tr>
         <tr><td>R / F</td><td>throttle up / down</td></tr>
         <tr><td>I / K &middot; J / L</td><td>net aim tilt / pan (slews the reticle)</td></tr>
-        <tr><td>Space</td><td>fire net (armed only, in the aimed direction)</td></tr>
-        <tr><td>C / V</td><td>cinch shut / release the catch</td></tr>
+        <tr><td>M</td><td>net select — CRADLE capture &harr; TRAWLER stand-off</td></tr>
+        <tr><td>Space</td><td>fire the selected net (armed only, in the aimed direction)</td></tr>
+        <tr><td>C &middot; X</td><td>cinch (CRADLE) &middot; cord-cut / jettison (TRAWLER)</td></tr>
+        <tr><td>V</td><td>release the catch</td></tr>
         <tr><td>G &middot; B &middot; H</td><td>arm toggle &middot; emergency stop &middot; return-to-home</td></tr>
         <tr><td>N &middot; Esc</td><td>reset &middot; quit</td></tr>
       </tbody>
     </table>
-    <p>The cockpit is not a mock-up. It speaks the same MAVLink command and telemetry protocol used by real flight controllers, so the exact same software drives a desktop vehicle emulator, an ArduPilot software-in-the-loop simulation, or a real Pixhawk flight controller over a serial link — only the connection target changes. Net aim is sent as real servo commands, arming, firing and return-to-home are real flight-controller commands, and the heads-up display is driven by live attitude, speed, GPS and battery telemetry coming back from the vehicle.</p>
+    <p>The cockpit is not a mock-up. It speaks the same MAVLink command and telemetry protocol used by real flight controllers, so the exact same software drives a desktop vehicle emulator, an ArduPilot software-in-the-loop simulation, or a real Pixhawk flight controller over a serial link — only the connection target changes. Net aim is sent as real servo commands; arming, firing both nets, cutting the tether and return-to-home are real flight-controller commands; and the heads-up display is driven by live attitude, speed, GPS and battery telemetry coming back from the vehicle.</p>
 
     <!-- 5 -->
-    <h2 id="payload">5 — The net &amp; how it is aimed</h2>
-    <p>The net is not simply dropped — it is launched from a pan/tilt gimbal so the operator can place it on a target that is off to the side or above. The whole launcher swings to the aimed direction, the net is cast out and spreads as it flies, and the mouth is then drawn shut by a drawstring spool that is a separate mechanism from the winch used to raise and lower the catch.</p>
-    <p>The aim and payload limits are a single shared definition, so the gimbal range in the physical model, the travel the operator can command in the cockpit, and the wiring on the flight controller all refer to the same numbers. Changing a limit in one place changes all three.</p>
+    <h2 id="payload">5 — The nets &amp; how they are aimed</h2>
+    <p>Neither net is simply dropped — both are launched from one shared pan/tilt gimbal so the operator can place them on a target that is off to the side or above. The turret swings to the aimed direction and casts the selected net, which spreads as it flies. The small CRADLE net's mouth is then drawn shut by a drawstring spool — a separate mechanism from the winch that raises and lowers the catch — while the large TRAWLER net is never recovered: a cord-cutter on its tether severs it so the catch falls away.</p>
+    <p>The aim and payload channels are a single shared definition, so the gimbal range in the physical model, the travel the operator can command in the cockpit, and the wiring on the flight controller all refer to the same numbers. Changing a limit in one place changes all three.</p>
     <table>
       <thead><tr><th>Actuator</th><th>Travel</th><th>Notes</th></tr></thead>
       <tbody>
-        <tr><td>Net aim — pan</td><td>&#8722;60&deg; &hellip; +60&deg;</td><td>swings the launcher left / right</td></tr>
+        <tr><td>Net aim — pan</td><td>&#8722;60&deg; &hellip; +60&deg;</td><td>swings the turret left / right</td></tr>
         <tr><td>Net aim — tilt</td><td>0&deg; &hellip; 75&deg;</td><td>raises / lowers the aim</td></tr>
-        <tr><td>Cinch</td><td>0 &hellip; 100 %</td><td>purses the mouth of the net shut</td></tr>
-        <tr><td>Release</td><td>quick-release</td><td>drops the catch on command</td></tr>
-        <tr><td>Fire</td><td>trigger</td><td>net launcher (CO&#8322; / igniter), armed only</td></tr>
+        <tr><td>Cinch</td><td>0 &hellip; 100 %</td><td>purses the CRADLE net's mouth shut</td></tr>
+        <tr><td>Release</td><td>quick-release</td><td>drops the CRADLE catch on command</td></tr>
+        <tr><td>Fire — CRADLE</td><td>trigger</td><td>capture-net launcher (CO&#8322; / igniter), armed only</td></tr>
+        <tr><td>Fire — TRAWLER</td><td>trigger</td><td>large stand-off net launcher, armed only</td></tr>
+        <tr><td>Cord-cut</td><td>trigger</td><td>severs the TRAWLER tether to jettison the catch</td></tr>
       </tbody>
     </table>
 
     <!-- 6 -->
     <h2 id="defense">6 — Defending the interceptor</h2>
-    <p>While TaloNet never attacks anyone's signals, its own navigation and command links are obvious targets, so the interceptor hardens itself. None of this transmits, jams, or spoofs anything — it only detects attacks and refuses to act on bad data. Each layer implements a published, verified algorithm or relies on an audited open-source implementation rather than home-grown cryptography, and the detection logic is light enough to run on the flight computer itself.</p>
+    <p>The interceptor's own navigation and command links are the obvious way to take it down mid-catch, so it hardens itself against exactly that. Each layer implements a published, verified algorithm or relies on an audited open-source implementation rather than home-grown cryptography, and the detection logic is light enough to run on the flight computer itself — it detects attacks aimed at the interceptor and refuses to act on bad data, so the catch finishes.</p>
     <ul>
       <li><strong>Authenticated satellite navigation.</strong> Galileo's navigation-message authentication (a one-way key chain with a delayed message authentication code) lets the receiver verify that the GNSS signals it is using are genuine. This is the only layer that can catch a spoof that is otherwise perfectly self-consistent.</li>
       <li><strong>Integrity monitoring.</strong> Receiver-autonomous integrity monitoring checks the satellite measurements against each other and statistically detects and excludes a faulty or hostile satellite before it can corrupt the position fix.</li>
@@ -127,7 +132,7 @@
 
     <!-- 7 -->
     <h2 id="forensics">7 — Reading the captured drone</h2>
-    <p>The adversary struck first; TaloNet only defended, non-kinetically. Once a hostile drone has been captured and secured, its storage can be read to answer the question that matters for a proportionate, human-authorized response: <strong>where did this come from?</strong> This is exploitation of a device we already hold — nothing here boots, contacts, or interferes with anything. The output is intelligence for a commander, not a court submission and not an automatic counter-strike.</p>
+    <p>Once a hostile drone has been captured and secured, its storage is read to answer the question that decides the next move: <strong>where did this come from?</strong> This is exploitation of a device you already hold — the output is targeting-grade intelligence for a commander: the launch point, the base, the next target on the route.</p>
     <p>The work runs as a fixed, ordered procedure with the original evidence treated as untouchable:</p>
     <table>
       <thead><tr><th>Step</th><th>What happens</th></tr></thead>
@@ -151,7 +156,7 @@
     <p>The software is covered by an automated test suite that runs in continuous integration on every change: it is linted and then exercised on Python 3.12. The tests cover the navigation-defense layers (authentication, integrity monitoring, spoof and jamming detection, command signing and the fused verdict), the cockpit's control core and command link, and the forensic core — the custody chain, the trajectory math, and the log parsers. The core logic is written to run without any third-party packages, so most of the suite runs with nothing installed.</p>
 
     <div class="foot">
-      TaloNet — counter-UAS interception &amp; recovery &middot; engagement decisions remain with authorized operators under applicable rules of engagement and international humanitarian law.
+      TaloNet — counter-UAS interception &amp; exploitation &middot; <a class="link" href="index.html">Home</a> &middot; <a class="link" href="mission.html">Mission</a> &middot; <a class="link" href="contact.html">Briefing</a> &middot; <a class="link" href="terms.html">Terms</a> &middot; <a class="link" href="privacy.html">Privacy</a>
     </div>
   </main>
 
