@@ -2,7 +2,7 @@
 
 Fuses the independent defensive layers into a single, explainable verdict that
 the flight stack can act on. This is the glue that "applies the defence code to
-ours": the Geulmae interceptor calls :meth:`DefenseMonitor.assess` every epoch
+ours": the Peregrine interceptor calls :meth:`DefenseMonitor.assess` every epoch
 and uses the returned :class:`NavSecurityState` to decide whether to keep
 trusting GNSS, coast on inertial dead-reckoning, or fall back to return-to-home.
 
