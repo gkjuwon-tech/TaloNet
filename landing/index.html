@@ -4,154 +4,110 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TaloNet — Capture the drone. Keep the intelligence.</title>
-  <meta name="description" content="TaloNet is a counter-UAS interceptor that nets hostile drones in flight and brings them back intact — a reusable airframe and a complete forensic record of where it launched. Capture over kill." />
-  <meta name="theme-color" content="#0b0c0e" />
+  <meta name="description" content="TaloNet is a counter-UAS interceptor that nets hostile drones in flight and recovers them intact — a reusable airframe and a complete forensic record of where they launched. Capture over kill." />
+  <meta name="theme-color" content="#000000" />
   <meta property="og:title" content="TaloNet — Capture the drone. Keep the intelligence." />
-  <meta property="og:description" content="We don't blow drones out of the sky. We take them whole — reusable airframe, recoverable intelligence, geolocated launch point." />
+  <meta property="og:description" content="We do not blow drones out of the sky. We take them whole — reusable airframe, recoverable intelligence, geolocated launch point." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="assets/video/hero-poster.jpg" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%230b0c0e'/%3E%3Cg fill='none' stroke='%23c7c7c2' stroke-width='1.5'%3E%3Cpath d='M4 5h16M4 12h16M4 19h16M9 5v14M15 5v14'/%3E%3C/g%3E%3C/svg%3E" />
-  <link rel="preload" href="assets/fonts/b612-400.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="assets/fonts/b612-700.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23000000'/%3E%3Cg fill='none' stroke='%23e9eaea' stroke-width='1.5'%3E%3Cpath d='M4 5h16M4 12h16M4 19h16M9 5v14M15 5v14'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="assets/fonts/b612mono-400.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="styles.css" />
+  <noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
 </head>
 <body id="top">
 
   <!-- NAV -->
   <header class="nav" id="nav">
-    <div class="wrap nav__inner">
+    <div class="nav__inner">
       <a class="brand" href="#top" aria-label="TaloNet home">TALONET</a>
       <nav class="nav__links" aria-label="Primary">
-        <a href="#why">Capture over kill</a>
+        <a href="#why">Capture</a>
         <a href="#engage">Engagement</a>
-        <a href="#feed">Sensor feed</a>
+        <a href="#feed">Operator</a>
         <a href="#forensics">Forensics</a>
         <a href="#platform">Platform</a>
+        <a href="docs.html">Docs</a>
       </nav>
       <div class="nav__cta">
-        <a class="btn btn--line" href="#contact">Request a briefing</a>
+        <a class="brief" href="#contact">Request a briefing</a>
         <button class="nav__toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
         </button>
       </div>
     </div>
   </header>
 
   <!-- HERO -->
-  <section class="hero">
-    <video class="hero__video" autoplay muted loop playsinline preload="metadata" poster="assets/video/hero-poster.jpg">
+  <section class="band band--hero" id="hero">
+    <video class="band__media" autoplay muted loop playsinline preload="metadata" poster="assets/video/hero-poster.jpg">
       <source src="assets/video/hero.webm" type="video/webm" />
       <source src="assets/video/hero.mp4" type="video/mp4" />
     </video>
-    <div class="hero__scrim"></div>
-    <div class="wrap hero__inner">
-      <p class="kicker">Counter-UAS interception &amp; recovery</p>
-      <h1>Don't destroy the drone.<br/>Capture it — and everything it knows.</h1>
-      <p class="hero__sub">
-        We net a hostile drone in flight and bring it back intact — a reusable airframe and a
-        complete record of where it launched and what it saw.
-      </p>
-      <div class="hero__actions">
-        <a class="btn btn--solid" href="#contact">Request a briefing</a>
-        <a class="btn btn--line" href="#why">Why capture beats kill</a>
-      </div>
+    <div class="band__scrim"></div>
+    <div class="band__overlay reveal">
+      <p class="eyebrow">Counter-UAS interception &amp; recovery</p>
+      <h1 class="display">Capture the drone.<br/>Keep the intelligence.</h1>
+      <p class="lead">We net a hostile drone in flight and bring it back intact — a reusable airframe and a complete record of where it launched and what it saw.</p>
+      <a class="brief brief--lg" href="#contact">Request a briefing <span aria-hidden="true">&#8599;</span></a>
     </div>
-    <div class="hero__stats wrap">
-      <div><b>120 km/h</b><span>Intercept dash</span></div>
-      <div><b>8 km</b><span>Operating radius</span></div>
-      <div><b>14 kg</b><span>Max takeoff</span></div>
-      <div><b>Intact</b><span>Airframe recovered, not wrecked</span></div>
-    </div>
+    <p class="band__credit">U.S. DoD footage · DVIDS · public domain</p>
   </section>
 
-  <!-- WHY CAPTURE -->
-  <section class="section" id="why">
-    <div class="wrap">
-      <div class="shead reveal">
-        <p class="label">01 / Capture over kill</p>
-        <div class="lead">
-          <h2>A wrecked drone tells you nothing. A captured one tells you everything.</h2>
-          <p>Every other counter-UAS answer ends in a fireball or a jammed band — and both throw away
-            the most valuable thing in the sky: the drone itself.</p>
+  <!-- CAPTURE OVER KILL (statement) -->
+  <section class="statement statement--media" id="why">
+    <div class="statement__inner reveal">
+      <div class="statement__head">
+        <div class="statement__text">
+          <p class="eyebrow">Capture over kill</p>
+          <h2 class="display">A wrecked drone tells you nothing.<br/>A captured one tells you everything.</h2>
+          <p class="lead lead--wide">Every other counter-UAS answer ends in a fireball or a jammed band — and both discard the most valuable thing in the sky: the drone itself. We take it whole. The airframe flies again. Its memory — flight logs, waypoints, payload imagery, firmware — survives, bit for bit, back to the launch point. The decision to engage stays human.</p>
         </div>
-      </div>
-
-      <div class="cols reveal">
-        <article class="col">
-          <h3>The airframe is an asset</h3>
-          <p>A netted drone lands whole — motors, optics and frame intact. Recover it, refly it,
-            or strip it for parts.</p>
-        </article>
-        <article class="col">
-          <h3>The memory is intelligence</h3>
-          <p>Flight logs, waypoints, payload imagery, firmware. A missile vaporises it; capture
-            preserves it, bit for bit, back to the launch point.</p>
-        </article>
-        <article class="col">
-          <h3>The decision stays human</h3>
-          <p>No autonomy decides who gets engaged. An operator classifies the contact and commits
-            from the cockpit. Never automatic.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ENGAGEMENT (video band) -->
-  <section class="vband" id="engage">
-    <video class="vband__video" autoplay muted loop playsinline preload="none" poster="assets/video/engage-poster.jpg">
-      <source src="assets/video/engage.webm" type="video/webm" />
-      <source src="assets/video/engage.mp4" type="video/mp4" />
-    </video>
-    <div class="vband__scrim"></div>
-    <div class="wrap vband__inner">
-      <p class="label">02 / The engagement</p>
-      <h2>Detect. Commit. Capture. Recover.</h2>
-      <ol class="steps">
-        <li><span>01</span><h4>Acquire the track</h4><p>Onboard EO/IR sensors, fused with RTK-grade navigation, hold the target and feed a stabilized picture to the operator.</p></li>
-        <li><span>02</span><h4>Operator commits</h4><p>A human classifies the contact and authorizes the intercept. Arm, fire, cinch and release are interlocked — never automatic.</p></li>
-        <li><span>03</span><h4>Net the target</h4><p>A software-aimed launcher places the net on the moving drone; a cinch line draws the catch closed against the airframe.</p></li>
-        <li><span>04</span><h4>Bring it home intact</h4><p>The interceptor carries the catch back to base, where the airframe is recovered and its storage handed to exploitation.</p></li>
-      </ol>
-    </div>
-  </section>
-
-  <!-- SENSOR FEED -->
-  <section class="section" id="feed">
-    <div class="wrap">
-      <p class="label reveal">03 / EO·IR sensor feed</p>
-      <div class="feature reveal">
-        <div class="feature__copy">
-          <h2>Built for the operator, not around them.</h2>
-          <p>The ground station is a single, legible cockpit: a live EO/IR feed, a heads-up state
-            overlay, and a control scheme tuned for the seconds that matter. Targeting is
-            software-assisted; the trigger is not.</p>
-          <ul class="list">
-            <li><b>Flight</b> — pitch, roll, yaw and throttle on a low-latency manual loop</li>
-            <li><b>Net aim</b> — pan/tilt the launcher against the tracked target</li>
-            <li><b>Interlocks</b> — fire, cinch and release require an armed state</li>
-            <li><b>Recovery</b> — return-to-home and emergency stop always within reach</li>
-          </ul>
-          <div class="keys">
-            <span class="key">WASD attitude</span>
-            <span class="key">IJKL net aim</span>
-            <span class="key">SPACE fire</span>
-            <span class="key">C cinch</span>
-            <span class="key">V release</span>
-            <span class="key">B e-stop</span>
-          </div>
-        </div>
-        <figure class="feature__media">
-          <video autoplay muted loop playsinline preload="none" poster="assets/video/eofeed-poster.jpg">
-            <source src="assets/video/eofeed.webm" type="video/webm" />
-            <source src="assets/video/eofeed.mp4" type="video/mp4" />
-          </video>
-          <figcaption>Live EO feed with navigation telemetry — bearing, altitude and range to track.</figcaption>
+        <figure class="shot">
+          <img src="assets/counter-uas-operator.jpg" alt="U.S. Army soldiers train with a hand-held counter-UAS device against simulated aerial threats" loading="lazy" />
+          <figcaption>Counter-UAS training &middot; U.S. Army &middot; DVIDS &middot; public domain</figcaption>
         </figure>
       </div>
     </div>
   </section>
 
+  <!-- ENGAGEMENT (full-bleed video) -->
+  <section class="band" id="engage">
+    <video class="band__media" autoplay muted loop playsinline preload="none" poster="assets/video/engage-poster.jpg">
+      <source src="assets/video/engage.webm" type="video/webm" />
+      <source src="assets/video/engage.mp4" type="video/mp4" />
+    </video>
+    <div class="band__scrim"></div>
+    <div class="band__overlay reveal">
+      <p class="eyebrow">The engagement</p>
+      <h2 class="display">Detect. Commit.<br/>Capture. Recover.</h2>
+      <p class="lead">Onboard EO/IR sensors hold the track and feed a stabilized picture to the operator. A human classifies the contact and authorizes the intercept. A software-aimed launcher places the net; a cinch line draws the catch closed. The interceptor carries it home — intact.</p>
+    </div>
+  </section>
+
+  <!-- OPERATOR FEED (full-bleed video) -->
+  <section class="band" id="feed">
+    <video class="band__media" autoplay muted loop playsinline preload="none" poster="assets/video/eofeed-poster.jpg">
+      <source src="assets/video/eofeed.webm" type="video/webm" />
+      <source src="assets/video/eofeed.mp4" type="video/mp4" />
+    </video>
+    <div class="band__scrim"></div>
+    <div class="band__overlay reveal">
+      <p class="eyebrow">EO·IR operator feed</p>
+      <h2 class="display">Built for the operator,<br/>not around them.</h2>
+      <p class="lead">A single, legible cockpit: a live EO/IR feed, a heads-up state overlay, and a control scheme tuned for the seconds that matter. Targeting is software-assisted. The trigger is not. Fire, cinch and release stay interlocked behind an armed state — never automatic.</p>
+    </div>
+  </section>
+
+  <!-- RECOVERED (full-bleed photo) -->
+  <section class="band band--photo">
+    <img class="band__media" src="assets/recovered-drones.jpg" alt="A recovered hostile unmanned aircraft system staged on a display table for technical exploitation" />
+    <div class="band__scrim"></div>
+    <div class="band__overlay reveal">
+      <p class="eyebrow">Recovered, not wrecked</p>
+      <h2 class="display display--quote">The drone you recover is the briefing the enemy never meant to give you.</h2>
+      <p class="lead">Recovered airframes, staged for exploitation. Every one is a lead.</p>
   <!-- PLATFORM (spec) -->
   <section class="band" id="platform">
     <div class="wrap">
@@ -183,91 +139,85 @@
         </div>
       </div>
     </div>
+    <p class="band__credit">Recovered UAS · U.S. DoD · DVIDS · public domain</p>
   </section>
 
-  <!-- FORENSICS -->
-  <section class="section" id="forensics">
-    <div class="wrap">
-      <div class="shead reveal">
-        <p class="label">04 / Exploitation — ForensIQ-1</p>
-        <div class="lead">
-          <h2>Every capture is a confession.</h2>
-          <p>A recovered drone is a sealed record. ForensIQ-1 is a write-blocked, read-only
-            exploitation appliance that turns recovered storage into a chain-of-custody report — and,
-            where the data allows, pins the geolocated launch point of the hostile aircraft.</p>
+  <!-- FORENSICS (statement + big figure) -->
+  <section class="statement statement--forensics statement--media" id="forensics">
+    <div class="statement__inner reveal">
+      <div class="statement__head">
+        <div class="statement__text">
+          <p class="eyebrow">Exploitation — ForensIQ-1</p>
+          <h2 class="display">Every capture<br/>is a confession.</h2>
+          <p class="lead lead--wide">A recovered drone is a sealed record. ForensIQ-1 is a write-blocked, read-only exploitation appliance that turns recovered storage into a signed chain-of-custody report — and, where the data allows, pins the geolocated launch point of the hostile aircraft.</p>
         </div>
+        <figure class="shot">
+          <img src="assets/forensic-recovery.jpg" alt="A tracked robot recovers a downed unmanned aircraft system in the field for exploitation" loading="lazy" />
+          <figcaption>Downed UAS recovery &middot; U.S. Army &middot; DVIDS &middot; public domain</figcaption>
+        </figure>
       </div>
-
-      <div class="forensic reveal">
-        <div class="readout" aria-label="Forensic readout sample">
-          <div class="readout__bar">FORENSIQ-1 · SESSION 0xA7F3 · READ-ONLY</div>
-<pre class="readout__pre">&gt; mount  /dev/sdb  <b>WRITE-BLOCKED</b>
-&gt; sha256 image.bin
-  9f2c…<b>e41d</b>  <span class="ok">VERIFIED</span>
-&gt; parse flight_log.bin
-  waypoints ............ 214
-  payload frames ....... 1,886
-  comms records ........ 73
-&gt; reconstruct trajectory
-  capture  48.5612 N  38.0411 E
-  <span class="warn">origin   48.4106 N  37.9281 E  ±240 m</span>
-&gt; export report.pdf  <b>SIGNED</b>
-  custody ............. <span class="ok">SEALED</span></pre>
-        </div>
-        <ol class="pipe">
-          <li><span>01</span><h4>Intake</h4><p>Recovered media is logged, photographed and sealed under custody.</p></li>
-          <li><span>02</span><h4>Image &amp; hash</h4><p>Write-blocked copy, SHA-256 verified bit for bit.</p></li>
-          <li><span>03</span><h4>Reconstruct</h4><p>Flight logs parsed into a full trajectory and payload timeline.</p></li>
-          <li><span>04</span><h4>Geolocate</h4><p>Trajectory walked back to an estimated launch origin with error bounds.</p></li>
-          <li><span>05</span><h4>Report</h4><p>Signed PDF and field printout with a complete custody trail.</p></li>
-        </ol>
+      <div class="sheet">
+        <div class="sheet__head"><span>Reconstructed launch origin</span><span>Session 0xA7F3 · read-only</span></div>
+        <dl class="spec">
+          <div><dt>Capture point</dt><dd>48.5612 N&ensp;·&ensp;38.0411 E</dd></div>
+          <div><dt>Estimated origin</dt><dd>48.41 N&ensp;·&ensp;37.93 E</dd></div>
+          <div><dt>Error bound</dt><dd>&#177;240 m</dd></div>
+          <div><dt>Source</dt><dd>recovered flight log</dd></div>
+          <div><dt>Integrity</dt><dd>SHA-256 verified · write-blocked</dd></div>
+          <div><dt>Output</dt><dd>signed PDF · custody sealed</dd></div>
+        </dl>
       </div>
-      <p class="fine reveal">ForensIQ-1 produces intelligence for the commander. It is an analysis tool — never an instruction to act.</p>
+      <p class="fine">ForensIQ-1 produces intelligence for the commander. It is an analysis tool — never an instruction to act.</p>
     </div>
   </section>
 
-  <!-- PLATFORM -->
-  <section class="section section--alt" id="platform">
-    <div class="wrap">
-      <div class="shead reveal">
-        <p class="label">05 / Platform — "Geulmae" interceptor</p>
-        <div class="lead">
-          <h2>A heavy-lift airframe with margin to spare.</h2>
-          <p>A coaxial X8 octocopter built to carry a launcher, a catch and a full sensor suite — and
-            still hold a 2.3:1 thrust margin for the dash and the snatch.</p>
+  <!-- PLATFORM (big spec figures) -->
+  <section class="statement statement--specs statement--media" id="platform">
+    <div class="statement__inner reveal">
+      <div class="statement__head">
+        <div class="statement__text">
+          <p class="eyebrow">Platform — &ldquo;Geulmae&rdquo; interceptor</p>
+          <h2 class="display">A heavy-lift airframe<br/>with margin to spare.</h2>
+          <p class="lead lead--wide">A coaxial X8 octocopter built to carry a launcher, a catch and a full sensor suite — and still hold a 2.3:1 thrust margin for the dash and the snatch.</p>
         </div>
+        <figure class="shot">
+          <img src="assets/platform-uas.jpg" alt="A soldier launches a small vertical-takeoff unmanned aircraft system by hand" loading="lazy" />
+          <figcaption>Hand-launched UAS &middot; U.S. Army &middot; DVIDS &middot; public domain</figcaption>
+        </figure>
       </div>
-      <div class="spec reveal">
-        <div>
-          <div class="spec__row"><span>Max takeoff</span><b>14 kg MTOW</b></div>
-          <div class="spec__row"><span>Mission payload</span><b>~5 kg</b></div>
-          <div class="spec__row"><span>Dash speed</span><b>120 km/h</b></div>
-        </div>
-        <div>
-          <div class="spec__row"><span>Endurance</span><b>~25 min capture</b></div>
-          <div class="spec__row"><span>Operating radius</span><b>8 km</b></div>
-          <div class="spec__row"><span>Hold precision</span><b>±0.1 m (RTK)</b></div>
-        </div>
+      <div class="sheet">
+        <div class="sheet__head"><span>Specifications</span><span>TLN-GM · coaxial X8 octocopter</span></div>
+        <dl class="spec spec--cols">
+          <div><dt>Max takeoff weight</dt><dd>14 kg</dd></div>
+          <div><dt>Mission payload</dt><dd>~5 kg</dd></div>
+          <div><dt>Dash speed</dt><dd>120 km/h</dd></div>
+          <div><dt>Endurance (capture)</dt><dd>~25 min</dd></div>
+          <div><dt>Operating radius</dt><dd>8 km</dd></div>
+          <div><dt>Hold precision</dt><dd>&#177;0.1 m (RTK)</dd></div>
+          <div><dt>Thrust margin</dt><dd>2.3 : 1</dd></div>
+          <div><dt>Navigation integrity</dt><dd>OSNMA · RAIM</dd></div>
+          <div><dt>Command authenticity</dt><dd>MAVLink 2 signed</dd></div>
+          <div><dt>Engagement</dt><dd>physical capture · human-authorized</dd></div>
+        </dl>
       </div>
-      <p class="fine reveal">Position integrity via OSNMA authentication and RAIM gating; command authenticity via MAVLink 2 signing on every control message. TaloNet captures by physical means and defends its own systems — it does not jam, spoof or take over other aircraft.</p>
+      <p class="fine">TaloNet captures by physical means and defends its own systems — it does not jam, spoof or take over other aircraft.</p>
     </div>
   </section>
 
   <!-- CONTACT -->
-  <section class="section" id="contact">
-    <div class="wrap cta">
-      <div class="cta__copy">
-        <p class="label">Get in touch</p>
-        <h2>Request a briefing.</h2>
-        <p>Walk through the system with our team — capabilities, integration, and evaluation
-          options for your airspace. Tell us about your requirement and we'll follow up.</p>
-      </div>
+  <section class="statement statement--contact" id="contact">
+    <div class="statement__inner reveal">
+      <p class="eyebrow">Get in touch</p>
+      <h2 class="display">Request a briefing.</h2>
+      <p class="lead lead--wide">Walk through the system with our team — capabilities, integration, and evaluation options for your airspace. Tell us about your requirement and we will follow up.</p>
       <form class="form" id="briefForm" novalidate>
-        <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" type="text" autocomplete="name" required /></div>
-        <div class="field"><label for="f-org">Organization</label><input id="f-org" name="org" type="text" autocomplete="organization" required /></div>
+        <div class="form__grid">
+          <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" type="text" autocomplete="name" required /></div>
+          <div class="field"><label for="f-org">Organization</label><input id="f-org" name="org" type="text" autocomplete="organization" required /></div>
+        </div>
         <div class="field"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" autocomplete="email" required /></div>
         <div class="field"><label for="f-msg">Requirement</label><textarea id="f-msg" name="message" rows="3"></textarea></div>
-        <button class="btn btn--solid btn--block" type="submit">Send request</button>
+        <button class="brief brief--submit" type="submit">Send request <span aria-hidden="true">&#8599;</span></button>
         <p class="form__note">For evaluation and procurement enquiries from qualified organizations.</p>
         <div class="form__ok" id="formOk">Request received. Our team will be in touch at the address you provided.</div>
       </form>
@@ -276,20 +226,19 @@
 
   <!-- FOOTER -->
   <footer class="foot">
-    <div class="wrap foot__inner">
+    <div class="foot__inner">
       <a class="brand" href="#top">TALONET</a>
       <nav class="foot__nav" aria-label="Footer">
-        <a href="#why">Capture over kill</a>
+        <a href="#why">Capture</a>
         <a href="#engage">Engagement</a>
-        <a href="#feed">Sensor feed</a>
+        <a href="#feed">Operator</a>
         <a href="#forensics">Forensics</a>
-        <a href="#contact">Contact</a>
+        <a href="#contact">Briefing</a>
+        <a href="docs.html">Docs</a>
       </nav>
     </div>
-    <div class="wrap">
-      <p class="fine">TaloNet is a counter-UAS interception and recovery system. Engagement decisions remain with authorized operators and commanders under applicable rules of engagement and international humanitarian law. Specifications are design targets and subject to change.</p>
-      <p class="fine foot__legal">Footage: U.S. Department of Defense (DVIDS), public domain. © <span id="year"></span> TaloNet.</p>
-    </div>
+    <p class="fine">TaloNet is a counter-UAS interception and recovery system. Engagement decisions remain with authorized operators and commanders under applicable rules of engagement and international humanitarian law. Specifications are design targets and subject to change.</p>
+    <p class="fine foot__legal">Footage: U.S. Department of Defense (DVIDS) and U.S. Defense Intelligence Agency, public domain. &copy; <span id="year"></span> TaloNet.</p>
   </footer>
 
   <script src="script.js"></script>
