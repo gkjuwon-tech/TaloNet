@@ -140,13 +140,18 @@ class MavlinkLink:
         elif typ in ("DISARM", "ESTOP"):
             self._arm(False)
         elif typ == "FIRE_NET":
-            self._fire()
+            self._relay(payload_map.TRIGGER_RELAY)          # CRADLE recovery net
+        elif typ == "FIRE_TRAWLER":
+            self._relay(payload_map.TRAWLER_TRIGGER_RELAY)  # TRAWLER stand-off net
+        elif typ == "CORD_CUT":
+            self._relay(payload_map.CORD_CUTTER_RELAY)      # sever tether -> jettison
         elif typ == "CINCH_NET":
             self._servo(payload_map.CINCH, 100.0)
         elif typ == "RELEASE":
             self._servo(payload_map.RELEASE, 1.0)
         elif typ == "RTH":
             self._rtl()
+        # MODE_CRADLE / MODE_TRAWLER carry no actuation (turret selection only).
         return Ack(True, self.seq)
 
     def _send_setpoint(self, sp: dict) -> None:
@@ -170,10 +175,11 @@ class MavlinkLink:
             self.mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
             0, 1 if arm else 0, 0, 0, 0, 0, 0, 0)
 
-    def _fire(self) -> None:
+    def _relay(self, index: int) -> None:
+        # Fire-and-forget pulse on a relay output (net launchers + cord-cutter).
         self.conn.mav.command_long_send(
             self._tsys, self._tcomp, self.mavutil.mavlink.MAV_CMD_DO_SET_RELAY,
-            0, payload_map.TRIGGER_RELAY, 1, 0, 0, 0, 0, 0)
+            0, index, 1, 0, 0, 0, 0, 0)
 
     def _rtl(self) -> None:
         self.conn.mav.command_long_send(

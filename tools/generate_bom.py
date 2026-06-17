@@ -93,6 +93,13 @@ DRONE_PAYLOAD = [
     ("DR-NP-017", "Net", "Drawstring (Dyneema 2 mm) + perimeter weights", "Dyneema + brass weights", 1, "set", "MAKE", 18, "Garage", "cad", "purse loop + rim weights"),
     ("DR-NP-018", "Net", "Muzzle nozzle + bay housing (printed)", "TaloNet PG-MUZZLE", 1, "set", "MAKE", 20, "Garage 3D print", "cad", "netlauncher_bay()"),
     ("DR-NP-019", "Payload IF", "Payload interface PCB (STM32G474) fab + assembly", "TaloNet PG-PAYIF rev A", 1, "ea", "OUTSOURCE", 65, "JLCPCB/PCBWay", "docs/06 §10", "interlock + driver carrier"),
+    ("DR-NP-020", "Trawler", "Large-bore stand-off net launcher (CO2 solenoid + 33 g cartridge)", "12V NC CO2 solenoid HP", 1, "set", "BUY", 55, "Industrial supply", "docs/06", "RELAY1 fired; large net vs kamikaze"),
+    ("DR-NP-021", "Trawler", "TRAWLER fire MOSFET + arming relay + flyback", "IRLB3034 + Omron G5LE", 1, "set", "BUY", 9, "Mouser", "docs/06", "RELAY1 drive + interlock"),
+    ("DR-NP-022", "Cord-cut", "Cord-cutter: nichrome burn-wire element + ceramic holder", "Nichrome 24AWG + holder", 1, "set", "MAKE", 8, "Garage", "cad", "RELAY2 tether sever (consumable element)"),
+    ("DR-NP-023", "Cord-cut", "Cord-cutter driver: power MOSFET + arming relay + flyback", "IRLB3034 + G5LE + 1N5408", 1, "set", "BUY", 9, "Mouser", "docs/06", "RELAY2 burn-wire drive + interlock"),
+    ("DR-NP-024", "Net", "TRAWLER large net, knotless Dyneema/Kevlar, ~6.5 m mouth, HD mesh", "Custom cast net (large)", 1, "ea", "MAKE", 110, "Garage / net maker", "cad", "trawler_net(); stand-off casting net"),
+    ("DR-NP-025", "Net", "TRAWLER rim weights (heavy) + heavy tether (Dyneema 3 mm)", "Brass weights + Dyneema", 1, "set", "MAKE", 26, "Garage", "cad", "wider spread + severable tether"),
+    ("DR-NP-026", "Net", "TRAWLER muzzle / canister housing (printed)", "TaloNet PG-TRAWL-MUZZLE", 1, "set", "MAKE", 24, "Garage 3D print", "cad", "trawler_launcher()"),
 ]
 
 APPLIANCE = [

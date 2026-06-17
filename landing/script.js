@@ -5,16 +5,18 @@
   var nav = document.getElementById("nav");
   var toggle = document.getElementById("navToggle");
 
-  // Sticky nav background after scroll.
-  var onScroll = function () {
-    if (window.scrollY > 24) nav.classList.add("is-stuck");
-    else nav.classList.remove("is-stuck");
-  };
-  onScroll();
-  window.addEventListener("scroll", onScroll, { passive: true });
+  // Sticky nav background after scroll (only on pages with the fixed nav).
+  if (nav) {
+    var onScroll = function () {
+      if (window.scrollY > 24) nav.classList.add("is-stuck");
+      else nav.classList.remove("is-stuck");
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
 
   // Mobile menu.
-  if (toggle) {
+  if (nav && toggle) {
     toggle.addEventListener("click", function () {
       var open = nav.classList.toggle("is-open");
       toggle.setAttribute("aria-expanded", open ? "true" : "false");

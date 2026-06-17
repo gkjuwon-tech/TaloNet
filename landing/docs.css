@@ -139,8 +139,44 @@ td code { white-space: nowrap; }
   color: var(--fg-mute); text-transform: uppercase;
 }
 
+/* sub-page meta line (legal "last updated", spec stamps) */
+.updated {
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--fg-mute); margin: 0 0 6px;
+}
+
+/* buttons + briefing form (contact / mission CTAs) */
+.cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 30px 0 6px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5em;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg);
+  border: 1px solid var(--line); padding: 13px 22px; background: transparent;
+  cursor: pointer; transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+.btn:hover { background: var(--fg); color: var(--ink); border-color: var(--fg); }
+.btn--solid { background: var(--fg); color: var(--ink); border-color: var(--fg); }
+.btn--solid:hover { background: #fff; }
+
+.form { display: grid; gap: 16px; max-width: 560px; margin: 30px 0 0; }
+.form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.field { display: grid; gap: 8px; }
+.field label {
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--fg-mute);
+}
+.field input, .field textarea {
+  background: var(--panel); border: 1px solid var(--line); color: var(--fg);
+  padding: 13px 15px; font: inherit; font-size: 0.98rem; resize: vertical;
+}
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+.form__note { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.03em; color: var(--fg-mute); }
+.form__ok { display: none; padding: 16px; border: 1px solid var(--line); color: var(--fg-dim); }
+.form__ok.is-on { display: block; }
+
 @media (max-width: 600px) {
   .toc { columns: 1; }
   table { font-size: 0.85rem; }
   td:first-child { white-space: normal; }
+  .form__grid { grid-template-columns: 1fr; }
 }

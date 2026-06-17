@@ -9,6 +9,8 @@
 //   - 6.8 kg empty / 14 kg MTOW
 //   - Jetson Orin companion compute, modular payload bays
 //   - Belly net-launcher bay + winch/release (captured drone carried in the net)
+//   - Dual net on one aiming turret: CRADLE recovery net (recon, taken alive) +
+//     TRAWLER large stand-off net + cord-cutter (kamikaze, neutralised & jettisoned)
 //
 // This is a DESIGN / visualization model (massing + mounting geometry), not a
 // stress-certified manufacturing model. Render STL:  openscad -o frame.stl talonet_frame.scad
@@ -92,6 +94,29 @@ net_pan          = 0;      // [-60:60] AIM-PAN  (SERVO9)  azimuth, deg
 net_tilt         = 16;     // [0:75]   AIM-TILT (SERVO10) tilt from straight-down, deg
 aim_servo        = 24;     // [14:40] aim-servo block size
 gimbal_ring_d    = 92;     // [50:170] pan bearing / tilt-yoke ring diameter
+
+/* [Payload: TRAWLER stand-off net] */
+// SECOND munition on the SAME aiming turret: a LARGE stand-off net for kamikaze /
+// attack drones. Fired from a safe distance (RELAY1, see gcs/payload_map.py),
+// it fouls the target's rotors; a cord-cutter (RELAY2) then severs the tether so
+// the net + drone fall away — the mothership NEVER closes to contact and never
+// hauls a live warhead home. Much bigger + denser than the CRADLE net.
+show_trawler        = true;
+trawler_net_radius  = 720;   // [400:1200] deployed mouth radius (CRADLE is 430)
+trawler_net_depth   = 820;   // [300:1400] pocket depth
+trawler_rings       = 7;     // [3:12] concentric hoops
+trawler_spokes      = 22;    // [8:36] denser mesh to foul rotors
+trawler_strut_d     = 2.6;   // [1:6] cord thickness (visual)
+trawler_launch_dist = 320;   // [0:700] fired farther out (stand-off distance)
+trawler_spread      = 1.30;  // [1:1.8] wider casting spread when launched
+trawler_weight_d    = 16;    // [6:30] heavier rim weights (larger net)
+trawler_muzzle_off  = 70;    // [0:160] +Y offset of TRAWLER muzzle beside CRADLE
+cord_cutter_len     = 30;    // [10:70] tether cord-cutter housing length (RELAY2)
+
+/* [Deployed munition] */
+// Which net is shown DEPLOYED — only one can be in the air at once. Mirrors the
+// cockpit engagement_mode (gcs/control.py). "CRADLE" keeps the default view.
+deployed_net        = "CRADLE";  // ["CRADLE", "TRAWLER", "NONE"]
 
 /* [Render] */
 $fn              = 64;
@@ -346,6 +371,70 @@ module cinch_mechanism() {
     }
 }
 
+// TRAWLER cord-cutter (RELAY2): a small housing at the muzzle lip where the
+// stand-off net's tether pays out. A burn-wire / blade inside severs the tether
+// on command so the fouled kamikaze drone falls away, fully separated from us.
+module cord_cutter(p) {
+    color(C_DARK)
+        translate(p) rotate([90, 0, 0])
+            cylinder(h = cord_cutter_len, d = 20, center = true, $fn = 24);
+    // hot burn-wire / blade slot (the cut happens here)
+    color([0.72, 0.22, 0.16])
+        translate(p) cube([22, 2.4, 9], center = true);
+}
+
+// TRAWLER launcher pod — the LARGE stand-off net's hardware, mounted beside the
+// CRADLE muzzle on the SAME aimed gimbal (one turret, two munitions). Wide-bore
+// barrel + folded-net canister + the cord-cutter actuator at the muzzle lip.
+module trawler_launcher() {
+    my = trawler_muzzle_off;
+    // wide-bore muzzle (the big net casts from here)
+    color(C_DARK)
+        translate([40, my, -bay_h - net_drop_off * 0.5]) rotate([90, 0, 0])
+            cylinder(h = 14, d = gimbal_ring_d * 0.85, center = true);
+    // folded-net pack canister bolted to the bay underside
+    color(C_KHAKI)
+        translate([40, my, -bay_h + 4]) cube([96, 74, 26], center = true);
+    // cord-cutter actuator at the muzzle lip (severs the tether on RELAY2)
+    cord_cutter([40, my, -bay_h - net_drop_off * 0.5 - 8]);
+}
+
+// TRAWLER stand-off net, DEPLOYED: a much larger, denser casting net fired well
+// clear of the mothership. Same casting geometry as capture_net() but bigger /
+// wider, offset to the TRAWLER muzzle, with one heavy tether running back to the
+// cord-cutter at the muzzle (where it is severed to jettison the catch).
+module trawler_net() {
+    R   = trawler_net_radius * trawler_spread;
+    D   = trawler_net_depth;
+    nr  = trawler_rings;
+    ns  = trawler_spokes;
+    my  = trawler_muzzle_off;
+    za  = -bay_h - net_drop_off - trawler_launch_dist;   // throat z (fired far out)
+    muzzle = [40, my, -bay_h];
+    function TP(i, j) =
+        let (t = i / nr,
+             r = R * t,
+             z = za - D * (0.15 * t + 0.85 * t * t),
+             a = 360 * j / ns)
+        [ 40 + r * cos(a), my + r * sin(a), z ];
+    throat = [40, my, za];
+
+    color(C_NET) {
+        for (j = [0 : ns - 1]) {
+            strut(throat, TP(1, j), trawler_strut_d);
+            for (i = [1 : nr - 1]) strut(TP(i, j), TP(i + 1, j), trawler_strut_d);
+        }
+        for (i = [1 : nr])
+            for (j = [0 : ns - 1])
+                strut(TP(i, j), TP(i, (j + 1) % ns), trawler_strut_d);
+    }
+    // heavier leading-edge weights (bigger net needs more spread momentum)
+    color(C_DARK)
+        for (j = [0 : ns - 1]) translate(TP(nr, j)) sphere(trawler_weight_d, $fn = 16);
+    // single heavy tether back to the muzzle cord-cutter (this is what gets cut)
+    color([0.3, 0.3, 0.27]) strut(muzzle, throat, 3.4);
+}
+
 // SOFTWARE-AIMED net launcher: a pan/tilt gimbal points the muzzle so the net
 // is thrown where the GCS commands, instead of being dropped by gravity. The
 // whole net pod (muzzle nozzle + capture net + cinch spool) rides the aim, so
@@ -378,9 +467,13 @@ module net_launcher() {
         color(C_DARK)
             translate([40, 0, -bay_h - net_drop_off]) rotate([90, 0, 0])
                 cylinder(h = 10, d = rd*0.55, center = true);
-        // the deployed net + the cinch spool ride the aim
-        if (show_cinch) cinch_mechanism();
-        if (show_net)   capture_net();
+        // both munitions + the cinch spool ride the same aim. The launcher PODS
+        // are always present hardware; only ONE net is shown deployed at a time
+        // (deployed_net), mirroring the cockpit engagement_mode.
+        if (show_cinch)   cinch_mechanism();
+        if (show_trawler) trawler_launcher();
+        if (show_net   && deployed_net == "CRADLE")  capture_net();
+        if (show_trawler && deployed_net == "TRAWLER") trawler_net();
     }
 }
 
@@ -406,8 +499,10 @@ module talonet_drone() {
     winch_release();
     if (show_aim) net_launcher();
     else {
-        if (show_cinch) cinch_mechanism();
-        if (show_net) capture_net();
+        if (show_cinch)   cinch_mechanism();
+        if (show_trawler) trawler_launcher();
+        if (show_net   && deployed_net == "CRADLE")  capture_net();
+        if (show_trawler && deployed_net == "TRAWLER") trawler_net();
     }
 }
 

@@ -16,14 +16,15 @@
 2. **순찰(PATROL).** `WASD`/`QE`/`RF`로 수동 비행. EO/IR FPV가 화면 가득, 헤딩/속도/고도 테이프.
 3. **탐지(DETECT).** 적 FPV 진입 → EO 트래커가 **빨간 `HOSTILE UAS` 박스**(RNG/BRG) 그림.
    오퍼레이터가 **육안으로 적/아군/위험도 판단**(교전 결정은 사람).
-4. **접근 + 조준(AIM).** 모선을 적 상방으로 몰고, `IJKL`로 **그물 머즐을 슬루** →
-   서보가 실제로 돌고(HUD 녹색 NET 레티클이 적 박스에 겹침), `net_pan/tilt`가 FC `DO_SET_SERVO`로 전달.
-5. **무장(ARM).** `G` → 상태바 **`ARMED`**(빨강). (E-Stop `B`는 언제든 즉시 안전화)
-6. **발사(FIRE).** 사정권에서 **`SPACE`** → 트리거 릴레이 ON, CO2 사출, **그물 발사·전개**.
-7. **결속(CINCH).** `C` → 입구 조임 모터로 mouth 졸라 결속(이탈 방지).
+4. **그물 선택(SELECT).** 표적 종류로 탄종 결정 — **`M`**: 정찰=🕊️CRADLE(생포), 자폭=💥TRAWLER(폐기).
+   HUD 레티클이 **초록 소형(CRADLE)** ↔ **빨강 대형(TRAWLER)** 으로 바뀌고 상태바 `NET ...` 표시.
+5. **조준(AIM).** `IJKL`로 **머즐 슬루** → 서보가 실제로 돌고(레티클이 적 박스에 겹침),
+   `net_pan/tilt`가 FC `DO_SET_SERVO`로 전달. *(CRADLE은 상방 근접, **TRAWLER는 자폭 반경 밖 안전거리 유지**.)*
+6. **무장(ARM).** `G` → 상태바 **`ARMED`**(빨강). (E-Stop `B`는 언제든 즉시 안전화)
+7. **발사(FIRE).** **`SPACE`** → 선택된 그물 발사. CRADLE=`FIRE_NET`(RELAY0), TRAWLER=`FIRE_TRAWLER`(RELAY1) → CO2 사출·전개.
 8. **처리(DISPOSITION) — 사람이 결정.**
-   - 양품 의심 → `H` 부근 안정화 후 윈치 회수 → 기지 복귀.
-   - 자폭형 의심 → `V`로 무인지대 **안전 투하**(별도 승인).
+   - 🕊️ **CRADLE(정찰 생포):** `C`로 입구 조임(cinch, 이탈 방지) → 윈치 회수 → `H` 기지 복귀.
+   - 💥 **TRAWLER(자폭 폐기):** 로터 결속 확인 + 무인지대 확인 → **`X`로 cord-cut**(RELAY2) → 그물째 투기, 모선 즉시 이격. *(cinch·윈치·접근 없음.)*
 9. **귀환(RTL).** `H` → FC `NAV_RETURN_TO_LAUNCH`.
 10. **사후 익스플로잇.** 회수한 적 드론 SD → **ForensIQ-1**([docs/09](09_Forensic_Appliance_Design.md))에
     꽂으면 → **적 발사지점 좌표·기지 레인지링·계획항로·펌웨어 귀속**이 열전사로 출력

@@ -9,10 +9,19 @@ Speed-first design: there is NO onboard VLM in the control loop — a human flie
 and aims, which is faster and keeps the engagement decision squarely with the
 operator. The net is software-AIMED (pan/tilt) and fired on command, not dropped.
 
+Two engagement nets share one aiming turret (see gcs/payload_map.py):
+    CRADLE  — small self-cinching net: take a RECON drone alive (fire->cinch->
+              winch->RTL). C cinch + V release belong to this mode.
+    TRAWLER — large stand-off net + cord-cutter: neutralise a KAMIKAZE drone from
+              a safe distance (fire->tangle->cut tether->jettison). X cuts the
+              cord. Never closes to contact, never hauls the catch home.
+SPACE is mode-aware: it fires whichever net is selected. M toggles the mode.
+
 Key map (held = analogue axes / aim slew; pressed = discrete actions):
     flight : W/S pitch, A/D roll, Q/E yaw, R/F throttle up/down
     net aim: I/K tilt up/down, J/L pan left/right
-    actions: SPACE fire-net, C cinch, V release(drop), G arm-toggle,
+    actions: SPACE fire(selected net), M net-mode toggle, C cinch (CRADLE),
+             X cord-cut/jettison (TRAWLER), V release(drop), G arm-toggle,
              B E-STOP, N estop-reset, H return-to-home
 """
 
@@ -32,11 +41,15 @@ def _clamp(v: float, lo: float, hi: float) -> float:
 # held-key flight-axis bindings: (positive_key, negative_key), return-to-centre
 _AXES = {"roll": ("d", "a"), "pitch": ("w", "s"), "yaw": ("e", "q")}
 
-# pressed-key discrete actions
+# pressed-key discrete actions ("space"->FIRE is resolved per engagement mode)
 _EVENTS = {
     "g": "ARM_TOGGLE", "b": "ESTOP", "n": "ESTOP_RESET",
-    "space": "FIRE_NET", "c": "CINCH_NET", "v": "RELEASE", "h": "RTH",
+    "space": "FIRE", "m": "MODE_TOGGLE", "c": "CINCH_NET", "x": "CORD_CUT",
+    "v": "RELEASE", "h": "RTH",
 }
+
+# Selectable engagement nets (see gcs/payload_map.py); the aiming turret is shared.
+CRADLE, TRAWLER = "CRADLE", "TRAWLER"
 
 
 @dataclass
@@ -52,6 +65,7 @@ class ControlState:
     armed: bool = False
     estop: bool = False
     mode: str = "MANUAL"
+    engagement_mode: str = CRADLE   # CRADLE (recon, recover) | TRAWLER (kamikaze, jettison)
     last_action: str = ""
     throttle_rate: float = 0.6   # per second
     aim_rate: float = 45.0       # deg per second
@@ -81,8 +95,11 @@ class ControlState:
     def handle_key(self, key: str) -> dict | None:
         """Process a discrete key press; return a command dict or None.
 
-        Interlocks: FIRE/CINCH/RELEASE require ARMED; nothing arms while E-STOP
-        is latched. These mirror the hardware arming interlock (docs/06 §11).
+        Interlocks: every payload action (fire/cinch/cord-cut/release) requires
+        ARMED; nothing arms while E-STOP is latched. CINCH belongs to CRADLE and
+        CORD-CUT to TRAWLER, so the wrong-mode key is refused — you can't cinch a
+        stand-off net, and you can't cut a recovery net's tether. These mirror the
+        hardware arming interlock (docs/06 §11).
         """
         action = _EVENTS.get(key.lower())
         if action is None:
@@ -100,7 +117,30 @@ class ControlState:
                 return self._denied("E-STOP latched")
             self.armed = not self.armed
             action = "ARM" if self.armed else "DISARM"
-        elif action in ("FIRE_NET", "CINCH_NET", "RELEASE"):
+        elif action == "MODE_TOGGLE":
+            # Selecting which net is armed is just turret/munition selection; it
+            # is always allowed (no actuation), even disarmed or under E-STOP.
+            self.engagement_mode = TRAWLER if self.engagement_mode == CRADLE else CRADLE
+            action = f"MODE_{self.engagement_mode}"
+            self.last_action = action
+            return {"type": action, "engagement_mode": self.engagement_mode,
+                    "setpoint": self.setpoint()}
+        elif action == "FIRE":
+            # Mode-aware trigger: CRADLE recovery net vs TRAWLER stand-off net.
+            action = "FIRE_NET" if self.engagement_mode == CRADLE else "FIRE_TRAWLER"
+            if self.estop or not self.armed:
+                return self._denied("payload not armed")
+        elif action == "CINCH_NET":
+            if self.engagement_mode != CRADLE:
+                return self._denied("CINCH is CRADLE-mode only")
+            if self.estop or not self.armed:
+                return self._denied("payload not armed")
+        elif action == "CORD_CUT":
+            if self.engagement_mode != TRAWLER:
+                return self._denied("CORD-CUT is TRAWLER-mode only")
+            if self.estop or not self.armed:
+                return self._denied("payload not armed")
+        elif action == "RELEASE":
             if self.estop or not self.armed:
                 return self._denied("payload not armed")
         elif action == "RTH":
@@ -115,6 +155,7 @@ class ControlState:
             "yaw": round(self.yaw, 3), "throttle": round(self.throttle, 3),
             "net_pan": round(self.net_pan, 1), "net_tilt": round(self.net_tilt, 1),
             "armed": self.armed, "mode": self.mode,
+            "engagement_mode": self.engagement_mode,
         }
 
     def _denied(self, reason: str) -> dict:
