@@ -110,8 +110,8 @@
       <ol class="steps">
         <li><span>01</span><h4>Acquire the track</h4><p>Onboard EO/IR sensors, fused with RTK-grade navigation, hold the target and feed a stabilized picture to the operator.</p></li>
         <li><span>02</span><h4>Operator commits</h4><p>A human classifies the contact and authorizes the intercept. Arm, fire, cinch and release are interlocked — never automatic.</p></li>
-        <li><span>03</span><h4>Net the target</h4><p>A software-aimed launcher places the net on the moving drone; a cinch line draws the catch closed against the airframe.</p></li>
-        <li><span>04</span><h4>Bring it home intact</h4><p>The interceptor carries the catch back to base, where the airframe is recovered and its storage handed to exploitation.</p></li>
+        <li><span>03</span><h4>Net the target — recover or neutralise</h4><p>One aimed turret, two nets. A <b>recon</b> drone is taken in the close-in capture net and cinched shut, intact. A <b>kamikaze</b> drone gets the large stand-off net from a safe distance — no approach, no contact.</p></li>
+        <li><span>04</span><h4>Home intact, or cut and dropped</h4><p>The captured recon drone rides home for exploitation. The attack drone's tether is severed and the whole catch is jettisoned over a clear area — the interceptor never closes on a live warhead.</p></li>
       </ol>
     </div>
   </section>
@@ -129,15 +129,17 @@
           <ul class="list">
             <li><b>Flight</b> — pitch, roll, yaw and throttle on a low-latency manual loop</li>
             <li><b>Net aim</b> — pan/tilt the launcher against the tracked target</li>
-            <li><b>Interlocks</b> — fire, cinch and release require an armed state</li>
+            <li><b>Net select</b> — switch between the capture net and the stand-off net</li>
+            <li><b>Interlocks</b> — fire, cinch, cord-cut and release require an armed state</li>
             <li><b>Recovery</b> — return-to-home and emergency stop always within reach</li>
           </ul>
           <div class="keys">
             <span class="key">WASD attitude</span>
             <span class="key">IJKL net aim</span>
+            <span class="key">M net select</span>
             <span class="key">SPACE fire</span>
             <span class="key">C cinch</span>
-            <span class="key">V release</span>
+            <span class="key">X cord-cut</span>
             <span class="key">B e-stop</span>
           </div>
         </div>
@@ -230,7 +232,7 @@
   <section class="section section--alt" id="platform">
     <div class="wrap">
       <div class="shead reveal">
-        <p class="label">05 / Platform — "Geulmae" interceptor</p>
+        <p class="label">05 / Platform — &ldquo;Peregrine&rdquo; interceptor</p>
         <div class="lead">
           <h2>A heavy-lift airframe with margin to spare.</h2>
           <p>A coaxial X8 octocopter built to carry a launcher, a catch and a full sensor suite — and
