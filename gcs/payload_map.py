@@ -7,12 +7,23 @@ limits, ``docs/06`` AIM-PAN/AIM-TILT pin map) — so the model is not "clay", it
 matches what the firmware actually drives. Change a limit here and the cockpit,
 the gimbal range, and the docs all refer to the same numbers.
 
+One aiming turret (pan/tilt), TWO munitions sharing it:
+
+- CRADLE  — the small self-cinching recovery net (RELAY 0): used to take a
+  RECON / surveillance drone ALIVE and intact (fire -> cinch -> winch -> RTL).
+- TRAWLER — the large stand-off net (RELAY 1) + cord-cutter (RELAY 2): used on a
+  KAMIKAZE / attack drone WITHOUT ever closing to contact. Fire the big net from
+  a safe distance to tangle its rotors, then sever the tether (burn-wire) and let
+  net+drone fall away. Nothing dangerous is ever hauled back to the mothership.
+
 Mapping (ArduPilot SERVOn outputs / relays):
-    SERVO 9  AIM-PAN    net gimbal pan    -60..+60 deg  -> 1000..2000 us
-    SERVO 10 AIM-TILT   net gimbal tilt     0..75   deg -> 1000..2000 us
-    SERVO 11 CINCH      mouth cinch driver  0..100  %   -> 1000..2000 us
-    SERVO 12 RELEASE    quick-release        0..1        -> 1000..2000 us
-    RELAY 0  TRIGGER    net-launcher fire (CO2 solenoid / igniter)
+    SERVO 9  AIM-PAN    net gimbal pan      -60..+60 deg -> 1000..2000 us
+    SERVO 10 AIM-TILT   net gimbal tilt       0..75  deg -> 1000..2000 us
+    SERVO 11 CINCH      mouth cinch driver    0..100 %   -> 1000..2000 us  (CRADLE)
+    SERVO 12 RELEASE    quick-release          0..1       -> 1000..2000 us  (CRADLE)
+    RELAY 0  TRIGGER    CRADLE  net-launcher fire (CO2 solenoid / igniter)
+    RELAY 1  TRAWLER    TRAWLER stand-off net-launcher fire (large charge)
+    RELAY 2  CORD-CUT   TRAWLER tether burn-wire / cutter (jettison the catch)
 """
 
 from __future__ import annotations
@@ -47,7 +58,11 @@ NET_TILT = ServoSpec("AIM-TILT", 10, 1000, 2000, 0.0, 75.0)
 CINCH = ServoSpec("CINCH", 11, 1000, 2000, 0.0, 100.0)
 RELEASE = ServoSpec("RELEASE", 12, 1000, 2000, 0.0, 1.0)
 
-TRIGGER_RELAY = 0          # MAV_CMD_DO_SET_RELAY index for net-launcher fire
+# MAV_CMD_DO_SET_RELAY indices (each net system fires fire-and-forget, never a
+# servo — pulse on, mechanism does the rest; safer in front of a live warhead).
+TRIGGER_RELAY = 0          # CRADLE recovery-net launcher fire
+TRAWLER_TRIGGER_RELAY = 1  # TRAWLER stand-off net launcher fire
+CORD_CUTTER_RELAY = 2      # TRAWLER tether burn-wire / cutter -> jettison the catch
 
 # Travel limits re-exported so gcs.control and cad stay in lock-step
 PAN_LIMITS = (NET_PAN.angle_min, NET_PAN.angle_max)

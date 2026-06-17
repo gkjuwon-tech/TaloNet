@@ -9,8 +9,9 @@ cinch / release) are all flown by hand; commands go out over a signed link.
 Run it:   python -m gcs
 Headless: SDL_VIDEODRIVER=dummy python -c "from gcs.app import run; run(max_frames=1, screenshot='cockpit.png')"
 
-Key map (gcs.control): WASD+QE fly, RF throttle, IJKL aim net, SPACE fire,
-C cinch, V drop, G arm, B e-stop, N reset, H RTH, ESC quit.
+Key map (gcs.control): WASD+QE fly, RF throttle, IJKL aim net, SPACE fire
+(selected net), M net-mode toggle (CRADLE recover <-> TRAWLER neutralise),
+C cinch, X cord-cut/jettison, V drop, G arm, B e-stop, N reset, H RTH, ESC quit.
 """
 
 from __future__ import annotations
@@ -255,18 +256,27 @@ def _draw_hud(pygame, screen, fonts, state, link, camera, window, t,
     _text(screen, sm, f"RNG {rng:3.0f}m  BRG {brg:03d}  CONF .82", bx, by + bs + 6, RED, center=True)
 
     # --- NET-AIM reticle (operator slews onto the target) ---
+    # The reticle is mode-coded so the operator can never confuse a recovery net
+    # with a stand-off kill: CRADLE = small green ring (take it alive), TRAWLER =
+    # large red double-ring (big net, keep your distance, jettison the catch).
+    trawler = state.engagement_mode == "TRAWLER"
     nx = int(cx + (state.net_pan / PAN_LIMITS[1]) * (w * 0.34))
     mid = (TILT_LIMITS[0] + TILT_LIMITS[1]) / 2
     ny = int(cy + ((state.net_tilt - mid) / mid) * (h * 0.30))
-    rc = HUD if state.armed else AMBER
-    draw.circle(screen, rc, (nx, ny), 18, 2)
-    draw.line(screen, rc, (nx - 28, ny), (nx - 8, ny), 2)
-    draw.line(screen, rc, (nx + 8, ny), (nx + 28, ny), 2)
-    draw.line(screen, rc, (nx, ny - 28), (nx, ny - 8), 2)
-    draw.line(screen, rc, (nx, ny + 8), (nx, ny + 28), 2)
-    _text(screen, sm, f"NET  P{state.net_pan:+.0f} T{state.net_tilt:.0f}", nx + 24, ny + 20, rc)
+    rc = (RED if trawler else HUD) if state.armed else AMBER
+    ring = 30 if trawler else 18
+    draw.circle(screen, rc, (nx, ny), ring, 2)
+    if trawler:
+        draw.circle(screen, rc, (nx, ny), ring + 9, 1)   # wide spread of the big net
+    draw.line(screen, rc, (nx - ring - 10, ny), (nx - ring + 10, ny), 2)
+    draw.line(screen, rc, (nx + ring - 10, ny), (nx + ring + 10, ny), 2)
+    draw.line(screen, rc, (nx, ny - ring - 10), (nx, ny - ring + 10), 2)
+    draw.line(screen, rc, (nx, ny + ring - 10), (nx, ny + ring + 10), 2)
+    label = "TRAWLER" if trawler else "CRADLE"
+    _text(screen, sm, f"{label} P{state.net_pan:+.0f} T{state.net_tilt:.0f}",
+          nx + ring + 6, ny + 20, rc)
     lock = "READY" if state.armed else "SAFE"
-    _text(screen, sm, lock, nx + 24, ny + 34, rc)
+    _text(screen, sm, lock, nx + ring + 6, ny + 34, rc)
 
     # --- bottom status bar ---
     bar_h = 30
@@ -284,10 +294,13 @@ def _draw_hud(pygame, screen, fonts, state, link, camera, window, t,
     link_lbl = ("LINK " + ("LIVE" if live else "SIM") + " #"
                 + str(getattr(link, "seq", 0)) + (" SIGNED" if getattr(
                     link, "signing_enabled", True) else ""))
+    net_sel = state.engagement_mode
+    net_col = RED if net_sel == "TRAWLER" else HUD
     segs = [
         (lg, state.mode, HUD), (lg, st, sc),
         (md, f"THR {state.throttle * 100:3.0f}%", WHITE),
-        (md, f"NET P{state.net_pan:+.0f} T{state.net_tilt:.0f}", WHITE),
+        (md, f"NET {net_sel}", net_col),
+        (md, f"AIM P{state.net_pan:+.0f} T{state.net_tilt:.0f}", WHITE),
         (md, link_lbl, HUD if live else DIM),
         (md, f"BATT {batt:.0f}%" if batt is not None else "BATT --", WHITE),
         (md, f"GPS {sats}sat" if sats is not None else "GPS --", DIM),

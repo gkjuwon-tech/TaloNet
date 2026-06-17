@@ -68,6 +68,8 @@ class TestMavlinkLink(unittest.TestCase):
                 "roll": 0.2, "pitch": 0.1, "yaw": 0.0, "throttle": 0.5,
                 "net_pan": 30, "net_tilt": 40}})
             link.send({"type": "FIRE_NET"})
+            link.send({"type": "FIRE_TRAWLER"})  # stand-off net (relay 1)
+            link.send({"type": "CORD_CUT"})      # sever tether (relay 2)
             time.sleep(0.5)
             tlm = link.telemetry()
             self.assertIn("pitch", tlm)
@@ -84,7 +86,9 @@ class TestMavlinkLink(unittest.TestCase):
                              payload_map.NET_PAN.pwm_for(30))       # pan servo
             self.assertEqual(servos.get(payload_map.NET_TILT.channel),
                              payload_map.NET_TILT.pwm_for(40))      # tilt servo
-            self.assertIn(payload_map.TRIGGER_RELAY, relays)        # net fire
+            self.assertIn(payload_map.TRIGGER_RELAY, relays)         # CRADLE net fire
+            self.assertIn(payload_map.TRAWLER_TRIGGER_RELAY, relays)  # TRAWLER net fire
+            self.assertIn(payload_map.CORD_CUTTER_RELAY, relays)      # tether cut
             link.close()
         finally:
             stop.set()

@@ -57,6 +57,33 @@ class TestControl(unittest.TestCase):
         self.assertEqual(s.handle_key("n")["type"], "ESTOP_RESET")
         self.assertEqual(s.handle_key("g")["type"], "ARM")     # arms after reset
 
+    def test_engagement_mode_toggle_selects_trawler_net(self):
+        s = ControlState(armed=True)
+        self.assertEqual(s.engagement_mode, "CRADLE")
+        self.assertEqual(s.handle_key("space")["type"], "FIRE_NET")   # CRADLE net
+        self.assertEqual(s.handle_key("m")["type"], "MODE_TRAWLER")   # toggle
+        self.assertEqual(s.engagement_mode, "TRAWLER")
+        self.assertEqual(s.handle_key("space")["type"], "FIRE_TRAWLER")  # big net
+        self.assertEqual(s.handle_key("m")["type"], "MODE_CRADLE")    # toggle back
+
+    def test_mode_toggle_allowed_even_disarmed(self):
+        s = ControlState()  # disarmed, not e-stopped
+        self.assertEqual(s.handle_key("m")["type"], "MODE_TRAWLER")  # selection only
+
+    def test_mode_specific_payload_interlocks(self):
+        s = ControlState(armed=True)  # CRADLE
+        self.assertEqual(s.handle_key("c")["type"], "CINCH_NET")     # cinch ok in CRADLE
+        self.assertEqual(s.handle_key("x")["type"], "DENIED")        # no cord-cut in CRADLE
+        s.handle_key("m")  # -> TRAWLER
+        self.assertEqual(s.handle_key("x")["type"], "CORD_CUT")      # cut ok in TRAWLER
+        self.assertEqual(s.handle_key("c")["type"], "DENIED")        # no cinch in TRAWLER
+
+    def test_trawler_actions_require_arm(self):
+        s = ControlState()
+        s.handle_key("m")  # TRAWLER, still disarmed
+        self.assertEqual(s.handle_key("space")["type"], "DENIED")
+        self.assertEqual(s.handle_key("x")["type"], "DENIED")
+
     def test_unmapped_key_ignored(self):
         self.assertIsNone(ControlState().handle_key("z"))
 
